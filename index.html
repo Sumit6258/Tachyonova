@@ -5,304 +5,402 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TACHYONOVA — Beyond the Speed of Light</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=DM+Sans:opsz,wght@9..40,400;9..40,500&family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
-*,::before,::after{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --clay:#F4F1FA;
-  --clay-c:linear-gradient(145deg,#D2F3FF 0%,#9EDAF5 100%);
-  --clay-v:linear-gradient(145deg,#EBE0FF 0%,#CFBAFF 100%);
-  --clay-g:linear-gradient(145deg,#CDFFF0 0%,#9AEED8 100%);
-  --clay-a:linear-gradient(145deg,#FFE8C2 0%,#FFD090 100%);
-  --bg:#07090F;
-  --text:#332F3A;
-  --text-m:#5A5270;
-  --text-l:rgba(244,241,250,0.55);
-  --cyan:#00D4FF;
-  --violet:#9B59FF;
-  --green:#00FF99;
-  --c1:rgba(0,212,255,0.18);
-  --c2:rgba(155,89,255,0.14);
-  /* 4-layer clay shadow */
-  --cs:0 22px 55px rgba(5,4,14,0.48),0 8px 22px rgba(5,4,14,0.28),inset 0 3px 9px rgba(255,255,255,0.74),inset 0 -4px 10px rgba(5,4,14,0.13);
-  --cs-hover:0 30px 70px rgba(5,4,14,0.55),0 12px 30px rgba(5,4,14,0.32),inset 0 3px 9px rgba(255,255,255,0.74),inset 0 -4px 10px rgba(5,4,14,0.13);
-  --cs-press:0 6px 18px rgba(5,4,14,0.42),inset 0 5px 14px rgba(5,4,14,0.22),inset 0 -1px 4px rgba(255,255,255,0.52);
-  --glass:rgba(20,16,42,0.6);
-  --gborder:rgba(255,255,255,0.12);
+*,::before,::after { margin:0; padding:0; box-sizing:border-box }
+
+:root {
+  --cyan: #00D4FF;
+  --violet: #9B59FF;
+  --green: #00EE88;
+  --amber: #FFB830;
+  --ice-white: #E2F4FF;
+  --text: rgba(210,235,250,0.84);
+  --text-dim: rgba(180,215,238,0.45);
+  --panel-bg: rgba(4,16,34,0.60);
+  --panel-border: rgba(160,215,245,0.18);
+  --f-disp: 'Nunito',sans-serif;
+  --f-body: 'DM Sans',sans-serif;
+  --f-mono: 'JetBrains Mono',monospace;
 }
-html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);cursor:none;font-family:'DM Sans',sans-serif}
+
+html, body {
+  width:100%; height:100%;
+  overflow:hidden;
+  background: #061420;
+  color: var(--text);
+  font-family: var(--f-body);
+  cursor: none;
+  user-select: none;
+}
+
+/* Three.js canvas injected at z-index:0 */
+#three-canvas { position:fixed; top:0; left:0; z-index:0; }
+
+/* Vignette + grain */
+#vig {
+  position:fixed; inset:0; z-index:50; pointer-events:none;
+  background: radial-gradient(ellipse at 50% 44%, transparent 28%, rgba(3,10,22,0.72) 100%);
+}
+#grain {
+  position:fixed; inset:0; z-index:51; pointer-events:none; opacity:.024;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:200px; animation:grain .35s steps(1) infinite;
+}
+@keyframes grain {
+  0%{transform:translate(0,0)} 20%{transform:translate(-3%,-2%)}
+  40%{transform:translate(2%,-1%)} 60%{transform:translate(-1%,3%)}
+  80%{transform:translate(2%,-2%)} 100%{transform:translate(-2%,1%)}
+}
 
 /* ── CURSOR ── */
-#CUR{position:fixed;z-index:9999;pointer-events:none;width:14px;height:14px;background:var(--clay);border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 0 2px rgba(0,212,255,0.45),0 4px 14px rgba(0,0,0,0.5);transition:width .18s,height .18s,background .18s}
-#CUR2{position:fixed;z-index:9998;pointer-events:none;width:46px;height:46px;border:1.5px solid rgba(244,241,250,0.22);border-radius:50%;transform:translate(-50%,-50%)}
-body.clay-hov #CUR{width:22px;height:22px;background:var(--cyan);box-shadow:0 0 0 3px rgba(0,212,255,0.3),0 0 20px rgba(0,212,255,0.4)}
+#cur {
+  position:fixed; z-index:9999; pointer-events:none;
+  width:11px; height:11px; border-radius:50%; background:var(--ice-white);
+  transform:translate(-50%,-50%);
+  box-shadow:0 0 0 2px rgba(0,205,255,0.4), 0 0 16px rgba(0,205,255,0.45);
+  transition:width .15s, height .15s, background .15s;
+}
+#cur2 {
+  position:fixed; z-index:9998; pointer-events:none;
+  width:38px; height:38px; border:1px solid rgba(0,205,255,0.28);
+  border-radius:50%; transform:translate(-50%,-50%);
+}
+body.hov #cur { width:18px; height:18px; background:var(--cyan); }
 
 /* ── LOADER ── */
-#LOAD{position:fixed;inset:0;z-index:10000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;transition:opacity 1.2s,visibility 1.2s}
-#LOAD.out{opacity:0;visibility:hidden}
-.load-orb{width:72px;height:72px;background:var(--clay-v);border-radius:50%;box-shadow:var(--cs),0 0 50px rgba(155,89,255,0.35);animation:lorb 1.6s ease-in-out infinite}
-@keyframes lorb{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
-.load-txt{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.65em;color:rgba(244,241,250,0.38);text-transform:uppercase;animation:blink 1.4s ease-in-out infinite}
-@keyframes blink{0%,100%{opacity:.3}50%{opacity:1}}
-.load-track{width:220px;height:4px;background:rgba(255,255,255,0.05);border-radius:100px;overflow:hidden}
-.load-fill{height:100%;width:0;border-radius:100px;background:linear-gradient(90deg,#00D4FF,#9B59FF,#00FF99);box-shadow:0 0 12px rgba(0,212,255,0.5);transition:width 2.8s cubic-bezier(.4,0,.2,1)}
-
-/* ── FIXED CANVASES ── */
-canvas{position:fixed;top:0;left:0;pointer-events:none}
-#cBG{z-index:0}
-#cSCENE{z-index:2}
-
-/* ── GRAIN ── */
-#GRAIN{position:fixed;inset:0;z-index:80;pointer-events:none;opacity:.026;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:200px;animation:grain .4s steps(1) infinite}
-@keyframes grain{0%{transform:translate(0,0)}20%{transform:translate(-2%,-2%)}40%{transform:translate(2%,-1%)}60%{transform:translate(-1%,2%)}80%{transform:translate(1%,-2%)}100%{transform:translate(-2%,1%)}}
-
-/* ── VIGNETTE ── */
-#VIG{position:fixed;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 32%,rgba(4,6,14,.68) 100%)}
+#loader {
+  position:fixed; inset:0; z-index:10000; background:#061420;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px;
+  transition:opacity 1.4s ease, visibility 1.4s ease;
+}
+#loader.out { opacity:0; visibility:hidden; }
+.l-orb {
+  width:60px; height:60px; border-radius:50%;
+  background: radial-gradient(circle at 35% 32%, #DFFBFF, #6ACCE8 42%, #006A9E 80%, #002840);
+  box-shadow: 0 0 0 8px rgba(0,150,200,0.09), 0 0 52px rgba(0,160,220,0.35),
+    inset 0 2px 6px rgba(255,255,255,0.68);
+  animation:lorb 1.8s ease-in-out infinite;
+}
+@keyframes lorb { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+.l-word {
+  font-family:var(--f-mono); font-size:9px; letter-spacing:.65em;
+  color:rgba(0,200,240,0.42); text-transform:uppercase;
+  animation:lpulse 1.5s ease-in-out infinite;
+}
+@keyframes lpulse { 0%,100%{opacity:.25} 50%{opacity:1} }
+.l-bar { width:180px; height:3px; background:rgba(255,255,255,0.05); border-radius:100px; overflow:hidden; }
+.l-fill {
+  height:100%; width:0; border-radius:100px;
+  background:linear-gradient(90deg,#00D4FF,#9B59FF,#00EE88);
+  box-shadow:0 0 10px rgba(0,212,255,0.45);
+  transition:width 2.8s cubic-bezier(0.4,0,0.2,1);
+}
 
 /* ── NAV PILL ── */
-#NAV{position:fixed;top:26px;left:50%;transform:translateX(-50%);z-index:200;display:flex;align-items:center;gap:10px;padding:10px 24px;background:rgba(244,241,250,.06);border:1px solid rgba(244,241,250,.14);border-radius:100px;backdrop-filter:blur(24px) saturate(1.6);box-shadow:0 8px 32px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.18)}
-.nlogo{font-family:'Nunito',sans-serif;font-weight:900;font-size:13px;letter-spacing:.42em;text-transform:uppercase;color:rgba(244,241,250,.9)}
-.nlogo b{color:var(--cyan);font-weight:900;text-shadow:0 0 14px rgba(0,212,255,.55)}
-.nsep{width:1px;height:20px;background:rgba(255,255,255,.1);margin:0 10px}
-.ndots{display:flex;gap:7px}
-.nd{width:6px;height:6px;border-radius:50%;background:rgba(244,241,250,.22);cursor:pointer;transition:all .3s}
-.nd.on{background:var(--cyan);box-shadow:0 0 10px rgba(0,212,255,.6);transform:scale(1.35)}
-.nidx{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.28em;color:rgba(244,241,250,.28)}
+#nav {
+  position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:200;
+  display:flex; align-items:center; gap:9px; padding:8px 20px;
+  background:rgba(210,238,255,0.055); border:1px solid rgba(210,238,255,0.1);
+  border-radius:100px; backdrop-filter:blur(20px) saturate(1.5);
+  box-shadow:0 6px 28px rgba(0,0,0,0.48), inset 0 1px 0 rgba(255,255,255,0.12);
+}
+.nav-logo { font-family:var(--f-disp); font-weight:900; font-size:11px; letter-spacing:.44em; text-transform:uppercase; color:rgba(215,238,255,0.9); }
+.nav-logo span { color:var(--cyan); text-shadow:0 0 12px rgba(0,212,255,0.55); }
+.nav-sep { width:1px; height:16px; background:rgba(255,255,255,0.09); margin:0 4px; }
+.nav-dots { display:flex; gap:6px; }
+.nd {
+  width:5px; height:5px; border-radius:50%; background:rgba(210,238,255,0.2);
+  cursor:pointer; transition:all .28s;
+}
+.nd.on { background:var(--cyan); box-shadow:0 0 8px rgba(0,212,255,0.65); transform:scale(1.45); }
+.nav-idx { font-family:var(--f-mono); font-size:9px; letter-spacing:.26em; color:rgba(210,238,255,0.28); }
 
-/* ── PANELS ── */
-.panel{position:fixed;inset:0;z-index:10;opacity:0;pointer-events:none;transition:opacity .85s ease;display:flex;align-items:center;justify-content:center}
-.panel.on{opacity:1;pointer-events:all}
+/* ── WORLDLINE NAV ── */
+#wlnav {
+  position:fixed; bottom:26px; left:50%; transform:translateX(-50%); z-index:200;
+  display:flex; align-items:flex-end; gap:8px; padding:12px 18px;
+  background:rgba(2,10,22,0.68); border:1px solid rgba(255,255,255,0.06);
+  border-radius:100px; backdrop-filter:blur(22px);
+  box-shadow:0 8px 32px rgba(0,0,0,0.58), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.wl { display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; }
+.wl-lbl {
+  font-family:var(--f-mono); font-size:6px; letter-spacing:.44em;
+  text-transform:uppercase; color:rgba(210,238,255,0.2); transition:color .28s; white-space:nowrap;
+}
+.wl.on .wl-lbl,.wl:hover .wl-lbl { color:rgba(0,212,255,0.68); }
+.wl-tube {
+  width:60px; height:9px; border-radius:100px; position:relative; overflow:hidden;
+  background:linear-gradient(90deg,rgba(0,212,255,0.03),rgba(0,212,255,0.1) 38%,rgba(155,89,255,0.08) 65%,rgba(0,212,255,0.03));
+  box-shadow:inset 0 1.5px 3px rgba(255,255,255,0.24), inset 0 -1.5px 3px rgba(0,0,0,0.42);
+  transition:all .32s ease;
+}
+.wl.on .wl-tube,.wl:hover .wl-tube {
+  background:linear-gradient(90deg,rgba(0,212,255,0.05),rgba(0,212,255,0.85) 38%,rgba(155,89,255,0.68) 65%,rgba(0,212,255,0.05));
+  box-shadow:0 0 18px rgba(0,212,255,0.48),0 0 36px rgba(0,212,255,0.16),
+    inset 0 1.5px 3px rgba(255,255,255,0.55), inset 0 -1.5px 3px rgba(0,0,0,0.28);
+}
+.wl-tube::after {
+  content:''; position:absolute; top:0; left:-100%; width:48%; height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.42),transparent);
+  animation:tshine 3.2s ease-in-out infinite;
+}
+.wl.on .wl-tube::after { animation:tshine 1.7s ease-in-out infinite; }
+@keyframes tshine { 0%{left:-100%} 45%,100%{left:210%} }
 
-/* ── CLAY SYSTEM ── */
-.clay{background:var(--clay);border-radius:60px;box-shadow:var(--cs)}
-.clay-c{background:var(--clay-c);border-radius:60px;box-shadow:var(--cs),0 0 35px rgba(0,200,240,.14)}
-.clay-v{background:var(--clay-v);border-radius:60px;box-shadow:var(--cs),0 0 35px rgba(155,89,255,.14)}
-.clay-g{background:var(--clay-g);border-radius:60px;box-shadow:var(--cs),0 0 35px rgba(0,255,153,.14)}
-.clay-a{background:var(--clay-a);border-radius:60px;box-shadow:var(--cs),0 0 35px rgba(255,180,50,.12)}
+/* ── GLASS PANEL ── */
+.gp {
+  background:var(--panel-bg);
+  border:1px solid var(--panel-border);
+  border-radius:22px;
+  backdrop-filter:blur(26px) saturate(2) brightness(1.08);
+  position:relative; overflow:hidden;
+  box-shadow:
+    0 0 0 1px rgba(200,238,255,0.05) inset,
+    0 18px 52px rgba(0,0,0,0.52),
+    inset 0 1px 0 rgba(255,255,255,0.11);
+}
+.gp::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px; border-radius:22px 22px 0 0;
+  background:linear-gradient(90deg,transparent,rgba(0,205,255,0.45),rgba(155,89,255,0.3),transparent);
+}
+.gp::after {
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(135deg,rgba(200,238,255,0.03) 0%,transparent 55%);
+}
 
-/* Liquid glass panel */
-.lglass{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.16);border-radius:36px;backdrop-filter:blur(30px) saturate(2.2) brightness(1.08);box-shadow:0 10px 40px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.28),inset 0 0 0 1px rgba(255,255,255,.05)}
-.lglass::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),rgba(0,212,255,.3),transparent);border-radius:36px 36px 0 0;pointer-events:none}
+/* ── FROZEN BUTTONS (smaller, ice-themed) ── */
+.fbtn {
+  height:50px; padding:0 26px;
+  border-radius:14px; border:none; cursor:pointer;
+  font-family:var(--f-disp); font-weight:900;
+  font-size:11.5px; letter-spacing:.1em; text-transform:uppercase;
+  position:relative; overflow:visible;
+  transition:all .18s cubic-bezier(.34,1.56,.64,1);
+}
+.fbtn-ice {
+  background:rgba(224,248,255,0.95); color:#083858;
+  box-shadow:
+    0 7px 18px rgba(0,140,210,0.28),
+    0 3px 7px rgba(0,0,0,0.18),
+    inset 0 2px 5px rgba(255,255,255,0.88),
+    inset 0 -2px 5px rgba(0,70,140,0.1);
+  text-shadow:0 1px 0 rgba(255,255,255,0.6);
+}
+.fbtn-ice::after {
+  content:''; position:absolute;
+  bottom:-5px; left:24%;
+  width:4px; height:0;
+  background:rgba(195,240,255,0.88);
+  border-radius:0 0 4px 4px;
+  animation:drip 5.5s ease-in 0.8s infinite;
+}
+.fbtn-ice:hover {
+  transform:translateY(-2px);
+  box-shadow:
+    0 11px 26px rgba(0,140,210,0.36),
+    0 4px 10px rgba(0,0,0,0.22),
+    inset 0 2px 5px rgba(255,255,255,0.88),
+    inset 0 -2px 5px rgba(0,70,140,0.1);
+}
+.fbtn-ice:active {
+  transform:scale(0.93);
+  box-shadow:
+    inset 0 4px 11px rgba(0,60,120,0.2),
+    inset 0 -1px 3px rgba(255,255,255,0.62);
+}
+.fbtn-ghost {
+  background:rgba(170,218,250,0.07); color:rgba(190,228,250,0.72);
+  border:1px solid rgba(160,215,248,0.2);
+  box-shadow:
+    0 4px 14px rgba(0,80,160,0.12),
+    inset 0 1px 0 rgba(255,255,255,0.07);
+}
+.fbtn-ghost:hover {
+  background:rgba(170,218,250,0.13); color:rgba(220,242,255,0.9);
+  border-color:rgba(160,215,248,0.36); transform:translateY(-2px);
+}
+.fbtn-ghost:active { transform:scale(0.93); }
+@keyframes drip {
+  0%   { height:0; opacity:1; transform:translateY(0); }
+  38%  { height:13px; opacity:0.8; transform:translateY(0); }
+  72%  { height:13px; opacity:0.35; transform:translateY(11px); }
+  100% { height:0; opacity:0; transform:translateY(15px); }
+}
 
-/* Dark glass */
-.dglass{background:rgba(12,10,28,.62);border:1px solid rgba(244,241,250,.1);border-radius:32px;backdrop-filter:blur(24px) saturate(1.6);box-shadow:0 16px 48px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.1)}
+/* ── EYEBROW ── */
+.ey {
+  font-family:var(--f-mono); font-size:8px; letter-spacing:.55em;
+  color:rgba(0,205,255,0.6); text-transform:uppercase;
+  display:flex; align-items:center; gap:12px;
+}
+.ey::before { content:''; width:22px; height:1px; background:var(--cyan); opacity:.58; flex-shrink:0; }
 
-/* Clay buttons */
-.btn-clay-c{height:64px;border-radius:100px;border:none;cursor:pointer;padding:0 44px;background:var(--clay-c);box-shadow:0 14px 38px rgba(0,170,240,.38),0 6px 18px rgba(0,0,0,.22),inset 0 3px 8px rgba(255,255,255,.72),inset 0 -3px 8px rgba(0,90,170,.13);font-family:'Nunito',sans-serif;font-weight:900;font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:#0A5580;transition:all .15s cubic-bezier(.34,1.56,.64,1)}
-.btn-clay-c:hover{transform:translateY(-3px);box-shadow:0 20px 50px rgba(0,170,240,.5),0 8px 22px rgba(0,0,0,.28),inset 0 3px 8px rgba(255,255,255,.72),inset 0 -3px 8px rgba(0,90,170,.13)}
-.btn-clay-c:active{transform:scale(.92);box-shadow:var(--cs-press)}
+/* ── SECTION HEADING ── */
+.sh {
+  font-family:var(--f-disp); font-weight:900; line-height:1.1;
+  letter-spacing:.05em; text-transform:uppercase;
+  color:rgba(215,240,255,0.94);
+}
 
-.btn-clay-v{height:64px;border-radius:100px;border:none;cursor:pointer;padding:0 44px;background:var(--clay-v);box-shadow:0 14px 38px rgba(120,60,240,.35),0 6px 18px rgba(0,0,0,.22),inset 0 3px 8px rgba(255,255,255,.72),inset 0 -3px 8px rgba(80,20,160,.13);font-family:'Nunito',sans-serif;font-weight:900;font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:#3D1A70;transition:all .15s cubic-bezier(.34,1.56,.64,1)}
-.btn-clay-v:hover{transform:translateY(-3px);box-shadow:0 20px 50px rgba(120,60,240,.45),0 8px 22px rgba(0,0,0,.28),inset 0 3px 8px rgba(255,255,255,.72),inset 0 -3px 8px rgba(80,20,160,.13)}
-.btn-clay-v:active{transform:scale(.92);box-shadow:var(--cs-press)}
+/* ── BODY COPY ── */
+.bc { font-family:var(--f-body); font-size:13.5px; line-height:1.85; color:var(--text-dim); }
 
-/* Embossed text on clay */
-.emb{font-family:'Nunito',sans-serif;font-weight:900;color:#3A2D6A;text-shadow:0 1.5px 0 rgba(255,255,255,.88),0 -1px 0 rgba(0,0,0,.16),0 3px 8px rgba(0,0,0,.1)}
-.emb-s{font-family:'Nunito',sans-serif;font-weight:700;color:rgba(58,45,106,.55);text-shadow:0 1px 0 rgba(255,255,255,.7),0 -0.5px 0 rgba(0,0,0,.08)}
-.emb-v{font-family:'Nunito',sans-serif;font-weight:900;color:#2A0D5C;text-shadow:0 1.5px 0 rgba(255,255,255,.85),0 -1px 0 rgba(0,0,0,.18),0 3px 8px rgba(0,0,0,.12)}
-.emb-c{font-family:'Nunito',sans-serif;font-weight:900;color:#0A3A52;text-shadow:0 1.5px 0 rgba(255,255,255,.85),0 -1px 0 rgba(0,0,0,.15),0 3px 8px rgba(0,0,0,.1)}
+/* ── DATA ROW ── */
+.dr {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 0; border-bottom:1px solid rgba(0,205,255,0.07);
+}
+.dr:first-child { border-top:1px solid rgba(0,205,255,0.07); }
+.dk { font-family:var(--f-mono); font-size:8px; letter-spacing:.36em; text-transform:uppercase; color:var(--text-dim); }
+.dv { font-family:var(--f-mono); font-size:11px; color:var(--cyan); letter-spacing:.1em; }
 
-/* Neon glass title */
-.neon-title{font-family:'Nunito',sans-serif;font-weight:900;font-size:clamp(44px,7.2vw,112px);letter-spacing:.16em;text-transform:uppercase;color:transparent;-webkit-text-stroke:1.5px rgba(0,220,255,.88);text-shadow:0 0 18px rgba(0,220,255,.85),0 0 36px rgba(0,220,255,.55),0 0 72px rgba(0,200,255,.32),0 0 110px rgba(0,170,255,.18),0 5px 28px rgba(0,0,0,.7);animation:nflicker 9s ease-in-out infinite;position:relative;z-index:1}
-@keyframes nflicker{0%,88%,90%,92%,95%,100%{opacity:1}-webkit-text-stroke-color:rgba(0,220,255,.88)}
-89%{opacity:.82}91%{opacity:.94}93%,94%{opacity:.87}
+/* ── ICE STAT CHIPS ── */
+.stat-chip {
+  display:flex; flex-direction:column; gap:4px; padding:14px 20px;
+  background:rgba(0,190,240,0.06); border:1px solid rgba(160,220,248,0.16);
+  border-radius:14px; backdrop-filter:blur(14px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.1), 0 4px 14px rgba(0,60,140,0.14);
+}
+.sv { font-family:var(--f-mono); font-weight:700; font-size:15px; color:var(--cyan); letter-spacing:.1em; }
+.sl { font-family:var(--f-mono); font-size:7px; letter-spacing:.45em; text-transform:uppercase; color:var(--text-dim); }
 
-/* Float animations */
-@keyframes cf1{0%,100%{transform:translateY(0) rotate(0deg)}28%{transform:translateY(-11px) rotate(.7deg)}62%{transform:translateY(-6px) rotate(-.4deg)}82%{transform:translateY(-13px) rotate(.3deg)}}
-@keyframes cf2{0%,100%{transform:translateY(0) rotate(0deg)}35%{transform:translateY(-9px) rotate(-.6deg)}70%{transform:translateY(-14px) rotate(.45deg)}}
-@keyframes cf3{0%,100%{transform:translateY(0) rotate(0deg)}45%{transform:translateY(-12px) rotate(.5deg)}78%{transform:translateY(-7px) rotate(-.35deg)}}
-@keyframes cf4{0%,100%{transform:translateY(0) rotate(0deg)}22%{transform:translateY(-15px) rotate(.4deg)}58%{transform:translateY(-8px) rotate(-.5deg)}}
-.f1{animation:cf1 9s ease-in-out infinite}
-.f2{animation:cf2 11.5s ease-in-out infinite}
-.f3{animation:cf3 8.5s ease-in-out infinite 1.5s}
-.f4{animation:cf4 12s ease-in-out infinite 3s}
+/* ── FLOAT ANIMATIONS ── */
+@keyframes fl1 { 0%,100%{transform:translateY(0) rotate(0deg)} 35%{transform:translateY(-9px) rotate(.5deg)} 70%{transform:translateY(-4px) rotate(-.3deg)} }
+@keyframes fl2 { 0%,100%{transform:translateY(0) rotate(0deg)} 28%{transform:translateY(-12px) rotate(-.4deg)} 68%{transform:translateY(-6px) rotate(.3deg)} }
+@keyframes fl3 { 0%,100%{transform:translateY(0) rotate(0deg)} 42%{transform:translateY(-7px) rotate(.4deg)} 78%{transform:translateY(-11px) rotate(-.25deg)} }
+.f1 { animation:fl1 9s ease-in-out infinite; }
+.f2 { animation:fl2 11s ease-in-out infinite 1.2s; }
+.f3 { animation:fl3 8.8s ease-in-out infinite 2.6s; }
 
-/* Ripple */
-.rip{position:fixed;border-radius:50%;border:1.5px solid rgba(0,212,255,.5);pointer-events:none;z-index:9990;animation:rp .65s ease-out forwards}
-@keyframes rp{from{width:0;height:0;opacity:.8;transform:translate(-50%,-50%)}to{width:90px;height:90px;opacity:0;transform:translate(-50%,-50%)}}
+/* ── SECTIONS ── */
+.sec {
+  position:fixed; inset:0; z-index:100;
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none; transition:opacity .8s ease;
+}
+.sec.on { opacity:1; pointer-events:all; }
 
-/* ────────────────────────────────────
-   WORLDLINE NAVIGATION
-──────────────────────────────────── */
-#WL{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);z-index:100;display:flex;gap:10px;align-items:flex-end;padding:14px 22px;background:rgba(6,8,18,.62);border:1px solid rgba(255,255,255,.07);border-radius:100px;backdrop-filter:blur(22px);box-shadow:0 10px 36px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.07)}
-.wl{display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer}
-.wl-lbl{font-family:'JetBrains Mono',monospace;font-size:6.5px;letter-spacing:.42em;text-transform:uppercase;color:rgba(244,241,250,.25);transition:color .3s;white-space:nowrap}
-.wl.on .wl-lbl,.wl:hover .wl-lbl{color:rgba(0,212,255,.75)}
-.wl-tube{width:68px;height:11px;border-radius:100px;background:linear-gradient(90deg,rgba(0,212,255,.04),rgba(0,212,255,.2) 38%,rgba(155,89,255,.16) 68%,rgba(0,212,255,.04));box-shadow:inset 0 1.5px 3px rgba(255,255,255,.38),inset 0 -1.5px 3px rgba(0,0,0,.42);transition:all .35s ease;position:relative;overflow:hidden}
-.wl.on .wl-tube,.wl:hover .wl-tube{background:linear-gradient(90deg,rgba(0,212,255,.08),rgba(0,212,255,.9) 38%,rgba(155,89,255,.72) 68%,rgba(0,212,255,.08));box-shadow:0 0 22px rgba(0,212,255,.5),0 0 44px rgba(0,212,255,.18),inset 0 1.5px 3px rgba(255,255,255,.55),inset 0 -1.5px 3px rgba(0,0,0,.3)}
-.wl-tube::after{content:'';position:absolute;top:0;left:-100%;width:55%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);animation:tshine 2.8s ease-in-out infinite}
-.wl.on .wl-tube::after{animation:tshine 1.8s ease-in-out infinite}
-@keyframes tshine{0%{left:-100%}45%,100%{left:200%}}
+/* ─── HERO (s0) ─── */
+#s0 { flex-direction:column; align-items:center; }
+.h0-tag { font-family:var(--f-mono); font-size:8px; letter-spacing:.7em; color:rgba(0,200,235,0.48); text-transform:uppercase; margin-bottom:16px; animation:fup 1s ease both .5s; }
+.h0-title {
+  font-family:var(--f-disp); font-weight:900;
+  font-size:clamp(48px,8vw,116px); letter-spacing:.18em; text-transform:uppercase;
+  background:linear-gradient(155deg, #E2F8FF 20%, rgba(0,210,255,0.65) 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  filter:drop-shadow(0 0 50px rgba(0,205,255,0.2));
+  animation:fup 1s ease both .7s, nflick 11s ease-in-out infinite 2s;
+}
+@keyframes nflick {
+  0%,84%,86%,89%,93%,100% { opacity:1; filter:drop-shadow(0 0 50px rgba(0,205,255,0.2)); }
+  85% { opacity:.78; filter:drop-shadow(0 0 18px rgba(0,205,255,0.08)); }
+  87%,88% { opacity:.9; }
+  90%,91%,92% { opacity:.82; }
+}
+.h0-rule { width:66px; height:1px; background:linear-gradient(90deg,transparent,var(--cyan),transparent); margin:18px auto; animation:fad 1s ease both 1s; }
+.h0-sub { font-family:var(--f-body); font-size:clamp(10px,1.1vw,14px); letter-spacing:.45em; color:rgba(210,238,255,0.5); text-transform:uppercase; animation:fup 1s ease both 1.1s; }
+.h0-desc { font-family:var(--f-mono); font-size:10.5px; letter-spacing:.14em; color:rgba(180,218,240,0.36); line-height:1.9; max-width:480px; text-align:center; margin-top:12px; animation:fup 1s ease both 1.3s; }
+.h0-stats { display:flex; gap:10px; margin-top:40px; animation:fup 1s ease both 1.5s; }
+.h0-scroll { position:absolute; bottom:38px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:8px; pointer-events:none; animation:fad 1s ease both 2.1s; }
+.scroll-line { width:1px; height:40px; background:linear-gradient(to bottom,rgba(0,205,255,0.6),transparent); animation:slp 2s ease-in-out infinite; }
+@keyframes slp { 0%,100%{opacity:.22;transform:scaleY(1)} 50%{opacity:1;transform:scaleY(1.18)} }
+.scroll-txt { font-family:var(--f-mono); font-size:7px; letter-spacing:.55em; color:rgba(0,205,255,0.38); text-transform:uppercase; }
+@keyframes fup { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fad { from{opacity:0} to{opacity:1} }
 
-/* ────────────────────────────────────
-   PANEL 0 — HERO
-──────────────────────────────────── */
-#P0{flex-direction:column;gap:0}
-.h0-inner{position:relative;z-index:5;display:flex;flex-direction:column;align-items:center;gap:0;margin-top:-100px}
-.h0-tag{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.7em;color:rgba(0,212,255,.52);text-transform:uppercase;margin-bottom:22px;animation:fup 1s ease both .5s}
-.h0-sub{font-family:'DM Sans',sans-serif;font-weight:500;font-size:clamp(10px,1.05vw,14px);letter-spacing:.44em;color:rgba(244,241,250,.48);text-transform:uppercase;margin-top:18px;animation:fup 1s ease both 1.1s}
-.h0-desc{font-family:'DM Sans',sans-serif;font-weight:500;font-size:13px;line-height:1.85;color:rgba(244,241,250,.4);max-width:520px;text-align:center;margin-top:16px;animation:fup 1s ease both 1.3s;letter-spacing:.05em}
-.h0-stats{display:flex;gap:14px;margin-top:42px;animation:fup 1s ease both 1.5s}
-.h0-orb{display:flex;flex-direction:column;align-items:center;gap:6px;padding:22px 28px}
-.orb-v{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:17px;letter-spacing:.08em}
-.orb-l{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:.5em;text-transform:uppercase}
-.h0-scroll{position:absolute;bottom:50px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:10px;animation:fin 1s ease both 2.2s;pointer-events:none}
-.scroll-line{width:1px;height:44px;background:linear-gradient(to bottom,rgba(0,212,255,.6),transparent);animation:slp 2s ease-in-out infinite}
-@keyframes slp{0%,100%{opacity:.25;transform:scaleY(1)}50%{opacity:1;transform:scaleY(1.18)}}
-.scroll-txt{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:.55em;color:rgba(0,212,255,.38);text-transform:uppercase}
-@keyframes fup{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
-@keyframes fin{from{opacity:0}to{opacity:1}}
+/* ─── RIPPLE ─── */
+.rip {
+  position:fixed; border-radius:50%; border:1.5px solid rgba(0,205,255,0.42);
+  pointer-events:none; z-index:9990; animation:rip .62s ease-out forwards;
+}
+@keyframes rip { from{width:0;height:0;opacity:.72;transform:translate(-50%,-50%)} to{width:84px;height:84px;opacity:0;transform:translate(-50%,-50%)} }
 
-/* ────────────────────────────────────
-   PANEL 1 — WHAT IS
-──────────────────────────────────── */
-#P1{gap:52px;padding:0 72px}
-.p1-left{flex:0 0 400px;display:flex;flex-direction:column;gap:18px}
-.p1-right{flex:0 0 490px;height:460px;position:relative}
+/* ─── MONUMENT ─── */
+@keyframes moncarve {
+  0%,100% { -webkit-text-stroke-color:rgba(195,225,248,0.22); text-shadow:0 0 50px rgba(0,205,255,0.04); }
+  50% { -webkit-text-stroke-color:rgba(0,205,255,0.52); text-shadow:0 0 90px rgba(0,205,255,0.16),0 0 22px rgba(0,205,255,0.2); }
+}
+@keyframes monrule { 0%,100%{width:65px;opacity:.25} 50%{width:180px;opacity:1} }
 
-/* ────────────────────────────────────
-   PANEL 2 — BARRIER
-──────────────────────────────────── */
-#P2{flex-direction:column;gap:24px;padding:55px 80px}
-.p2-top{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;max-width:640px}
-.p2-frame{width:82vw;height:44vh;position:relative}
-.p2-legend{display:flex;gap:32px}
-.leg-item{display:flex;align-items:center;gap:10px}
-.leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;box-shadow:0 0 8px currentColor}
-.leg-txt{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.35em;color:rgba(244,241,250,.38);text-transform:uppercase}
-
-/* ────────────────────────────────────
-   PANEL 3 — TACHYON CORE
-──────────────────────────────────── */
-#P3{gap:64px;padding:0 72px}
-.p3-left{flex:0 0 440px;height:440px;position:relative;display:flex;align-items:center;justify-content:center}
-.p3-right{flex:0 0 380px;display:flex;flex-direction:column;gap:18px}
-.spec-block{display:flex;flex-direction:column;border-radius:24px;overflow:hidden}
-.spec-row{display:flex;align-items:center;justify-content:space-between;padding:11px 20px;border-bottom:1px solid rgba(255,255,255,.06)}
-.spec-row:last-child{border-bottom:none}
-.sk{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.38em;color:rgba(244,241,250,.3);text-transform:uppercase}
-.sv{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--cyan);letter-spacing:.1em}
-.formula-pill{display:inline-flex;padding:11px 18px;background:rgba(0,0,0,.3);border:1px solid rgba(0,212,255,.22);border-radius:100px;font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(0,212,255,.8);text-shadow:0 0 12px rgba(0,212,255,.4);letter-spacing:.05em}
-
-/* ────────────────────────────────────
-   PANEL 4 — QPOS LATTICE
-──────────────────────────────────── */
-#P4{flex-direction:column;gap:22px;padding:48px 60px}
-.p4-top{text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center}
-.p4-frame{width:92vw;height:50vh;position:relative}
-.p4-stats{display:flex;gap:0}
-.p4-stat{display:flex;flex-direction:column;align-items:center;gap:5px;padding:16px 36px;border-radius:100px}
-.psv{font-family:'Nunito',sans-serif;font-weight:900;font-size:22px;letter-spacing:.06em}
-.psl{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:.48em;text-transform:uppercase}
-
-/* ────────────────────────────────────
-   PANEL 5 — FUTURE
-──────────────────────────────────── */
-#P5{gap:50px;padding:0 80px;align-items:center}
-.p5-left{flex:0 0 400px;display:flex;flex-direction:column;gap:20px}
-.p5-right{flex:1;max-width:420px;display:flex;flex-direction:column;gap:14px}
-.phase-card{display:flex;gap:18px;align-items:flex-start;padding:20px 24px;border-radius:28px}
-.ph-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px}
-.ph-title{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.5em;text-transform:uppercase;margin-bottom:6px}
-.ph-body{font-family:'DM Sans',sans-serif;font-weight:500;font-size:12px;line-height:1.75}
-
-/* ────────────────────────────────────
-   PANEL 6 — MONUMENT
-──────────────────────────────────── */
-#P6{flex-direction:column;gap:12px}
-.mon-wrap{position:relative;z-index:5;display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:none}
-.mon-carved{font-family:'Nunito',sans-serif;font-weight:900;font-size:clamp(40px,7vw,108px);letter-spacing:.2em;color:transparent;-webkit-text-stroke:1px rgba(244,241,250,.26);text-shadow:0 0 80px rgba(0,212,255,.06),0 3px 8px rgba(0,0,0,.9);text-transform:uppercase;animation:mcg 4s ease-in-out infinite}
-@keyframes mcg{0%,100%{-webkit-text-stroke-color:rgba(244,241,250,.24);text-shadow:0 0 60px rgba(0,212,255,.04)}50%{-webkit-text-stroke-color:rgba(0,212,255,.52);text-shadow:0 0 100px rgba(0,212,255,.16),0 0 24px rgba(0,212,255,.22)}}
-.mon-rule{width:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);box-shadow:0 0 8px var(--cyan);animation:mrule 3.2s ease-in-out infinite}
-@keyframes mrule{0%,100%{width:70px;opacity:.28}50%{width:200px;opacity:1}}
-.mon-sub{font-family:'DM Sans',sans-serif;font-weight:500;font-size:clamp(9px,.95vw,13px);letter-spacing:.5em;color:rgba(244,241,250,.38);text-transform:uppercase}
-.mon-desc{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.15em;color:rgba(244,241,250,.28);max-width:440px;text-align:center;line-height:1.9;margin-top:4px}
-.mon-cta{display:flex;gap:18px;margin-top:24px;pointer-events:all}
-
-/* ── MODAL ── */
-#MODAL{position:fixed;inset:0;z-index:5000;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .4s,visibility .4s;background:rgba(3,5,14,.72);backdrop-filter:blur(22px)}
-#MODAL.show{opacity:1;visibility:visible}
-.m-box{max-width:560px;width:90%;position:relative;overflow:hidden;border-radius:40px;background:rgba(14,11,30,.88);border:1px solid rgba(244,241,250,.1);box-shadow:0 30px 80px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.14)}
-.m-topbar{position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,212,255,.6),rgba(155,89,255,.4),transparent)}
-.m-head{padding:28px 32px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
-.m-ew{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.55em;color:rgba(0,212,255,.6);text-transform:uppercase;margin-bottom:10px}
-.m-title{font-family:'Nunito',sans-serif;font-weight:900;font-size:clamp(20px,2.4vw,28px);letter-spacing:.06em;text-transform:uppercase;color:rgba(244,241,250,.92);line-height:1.1}
-.m-close{width:32px;height:32px;border:1px solid rgba(244,241,250,.15);background:transparent;border-radius:100px;color:rgba(244,241,250,.45);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .2s}
-.m-close:hover{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 12px rgba(0,212,255,.2)}
-.m-rule{height:1px;background:linear-gradient(90deg,rgba(0,212,255,.18),rgba(155,89,255,.12),transparent);margin:18px 32px 0}
-.m-body{padding:20px 32px 32px;display:flex;flex-direction:column;gap:14px}
-.m-text{font-family:'DM Sans',sans-serif;font-weight:500;font-size:13px;letter-spacing:.04em;color:rgba(244,241,250,.52);line-height:1.82}
-.m-text b{color:rgba(244,241,250,.75);font-weight:600}
-.m-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06)}
-.m-row:first-child{border-top:1px solid rgba(255,255,255,.06)}
-.m-rk{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.38em;color:rgba(244,241,250,.28);text-transform:uppercase}
-.m-rv{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--cyan);letter-spacing:.1em}
-.m-btns{display:flex;gap:12px;margin-top:6px}
-.m-btn-c{height:52px;border-radius:100px;border:none;cursor:pointer;padding:0 32px;background:var(--clay-c);box-shadow:0 10px 28px rgba(0,170,240,.32),0 4px 12px rgba(0,0,0,.2),inset 0 2px 6px rgba(255,255,255,.7),inset 0 -2px 6px rgba(0,90,170,.12);font-family:'Nunito',sans-serif;font-weight:900;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#0A5580;transition:all .15s cubic-bezier(.34,1.56,.64,1)}
-.m-btn-c:hover{transform:translateY(-2px)}
-.m-btn-c:active{transform:scale(.93)}
-.m-btn-g{height:52px;border-radius:100px;border:1px solid rgba(244,241,250,.16);cursor:pointer;padding:0 32px;background:transparent;font-family:'Nunito',sans-serif;font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:rgba(244,241,250,.48);transition:all .15s}
-.m-btn-g:hover{border-color:rgba(244,241,250,.35);color:rgba(244,241,250,.8);transform:translateY(-2px)}
-
-/* eyebrow */
-.ey{font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.55em;color:rgba(0,212,255,.6);text-transform:uppercase;display:flex;align-items:center;gap:14px}
-.ey::before{content:'';width:26px;height:1px;background:var(--cyan);opacity:.55;flex-shrink:0}
-/* body copy light */
-.bc{font-family:'DM Sans',sans-serif;font-weight:500;font-size:13.5px;line-height:1.85;color:rgba(244,241,250,.55)}
-/* clay data row */
-.cdr{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(58,45,106,.15)}
-.cdr:first-child{border-top:1px solid rgba(58,45,106,.15)}
-.cdk{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.38em;text-transform:uppercase}
-.cdv{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.08em}
-
+/* ─── MODAL ─── */
+#modal {
+  position:fixed; inset:0; z-index:5000; display:flex; align-items:center; justify-content:center;
+  opacity:0; visibility:hidden; transition:opacity .38s,visibility .38s;
+  background:rgba(2,8,18,0.72); backdrop-filter:blur(20px);
+}
+#modal.show { opacity:1; visibility:visible; }
+.m-box {
+  max-width:540px; width:90%; border-radius:28px;
+  background:rgba(4,14,30,0.92); border:1px solid rgba(195,228,250,0.1);
+  box-shadow:0 28px 72px rgba(0,0,0,0.68), inset 0 1px 0 rgba(255,255,255,0.11);
+  overflow:hidden; position:relative;
+}
+.m-topbar { position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(0,205,255,0.55),rgba(155,89,255,0.38),transparent); }
+.m-head { padding:26px 28px 0; display:flex; align-items:flex-start; justify-content:space-between; }
+.m-ew { font-family:var(--f-mono); font-size:8px; letter-spacing:.52em; color:rgba(0,205,255,0.58); text-transform:uppercase; margin-bottom:9px; }
+.m-title { font-family:var(--f-disp); font-weight:900; font-size:clamp(19px,2.3vw,26px); letter-spacing:.06em; text-transform:uppercase; color:rgba(215,240,255,0.92); line-height:1.1; }
+.m-close { width:28px; height:28px; border:1px solid rgba(210,238,255,0.13); background:transparent; border-radius:100px; color:rgba(210,238,255,0.38); cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:center; transition:all .18s; }
+.m-close:hover { border-color:var(--cyan); color:var(--cyan); box-shadow:0 0 9px rgba(0,205,255,0.2); }
+.m-rule { height:1px; background:linear-gradient(90deg,rgba(0,205,255,0.16),rgba(155,89,255,0.1),transparent); margin:14px 28px 0; }
+.m-body { padding:16px 28px 26px; display:flex; flex-direction:column; gap:12px; }
+.m-text { font-family:var(--f-body); font-size:13px; letter-spacing:.04em; color:rgba(195,224,245,0.5); line-height:1.82; }
+.m-row { display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-bottom:1px solid rgba(255,255,255,0.055); }
+.m-row:first-child { border-top:1px solid rgba(255,255,255,0.055); }
+.m-rk { font-family:var(--f-mono); font-size:8px; letter-spacing:.36em; color:rgba(195,224,245,0.27); text-transform:uppercase; }
+.m-rv { font-family:var(--f-mono); font-size:10px; color:var(--cyan); letter-spacing:.1em; }
+.m-btns { display:flex; gap:10px; margin-top:4px; }
+.m-btn-c { height:46px; padding:0 24px; border-radius:12px; border:none; cursor:pointer; background:rgba(214,244,255,0.94); color:#073650; font-family:var(--f-disp); font-weight:900; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; text-shadow:0 1px 0 rgba(255,255,255,0.55); box-shadow:0 6px 16px rgba(0,130,200,0.26),inset 0 2px 5px rgba(255,255,255,0.85); transition:all .15s cubic-bezier(.34,1.56,.64,1); }
+.m-btn-c:hover { transform:translateY(-2px); }
+.m-btn-c:active { transform:scale(0.93); }
+.m-btn-g { height:46px; padding:0 24px; border-radius:12px; border:1px solid rgba(195,224,245,0.15); cursor:pointer; background:transparent; color:rgba(195,224,245,0.44); font-family:var(--f-disp); font-weight:700; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; transition:all .15s; }
+.m-btn-g:hover { border-color:rgba(195,224,245,0.32); color:rgba(215,238,255,0.82); transform:translateY(-2px); }
 </style>
 </head>
 <body>
 
-<div id="CUR"></div><div id="CUR2"></div>
-<div id="GRAIN"></div>
-<div id="VIG"></div>
+<!-- ── OVERLAYS ── -->
+<div id="vig"></div>
+<div id="grain"></div>
+<div id="cur"></div>
+<div id="cur2"></div>
 
-<!-- LOADER -->
-<div id="LOAD">
-  <div class="load-orb f1"></div>
-  <div class="load-txt">Initialising Superluminal Network</div>
-  <div class="load-track"><div class="load-fill" id="LF"></div></div>
+<!-- ── LOADER ── -->
+<div id="loader">
+  <div class="l-orb f1"></div>
+  <div class="l-word">Initialising Superluminal Network</div>
+  <div class="l-bar"><div class="l-fill" id="lf"></div></div>
 </div>
 
-<!-- CANVASES -->
-<canvas id="cBG"></canvas>
-<canvas id="cSCENE"></canvas>
-
-<!-- NAV -->
-<nav id="NAV">
-  <div class="nlogo">TACHYO<b>NOVA</b></div>
-  <div class="nsep"></div>
-  <div class="ndots" id="NDOTS"></div>
-  <div class="nsep"></div>
-  <div class="nidx"><span id="NI">01</span>&thinsp;/&thinsp;07</div>
+<!-- ── NAV ── -->
+<nav id="nav">
+  <div class="nav-logo">TACHYO<span>NOVA</span></div>
+  <div class="nav-sep"></div>
+  <div class="nav-dots" id="ndots"></div>
+  <div class="nav-sep"></div>
+  <div class="nav-idx"><span id="ni">01</span>&thinsp;/&thinsp;07</div>
 </nav>
 
-<!-- ══ PANEL 0: HERO ══ -->
-<section class="panel on" id="P0">
-  <div class="h0-inner">
-    <div class="h0-tag">Experimental Research Initiative · Superluminal Networks · Phase 0</div>
-    <div class="neon-title">TACHYONOVA</div>
-    <div class="h0-sub">Beyond the Speed of Light</div>
-    <div class="h0-desc">An experimental concept studying what a blockchain would look like if governed by the physics of tachyons — particles that exist, theoretically, only beyond the boundary of light itself.</div>
-    <div class="h0-stats">
-      <div class="h0-orb clay-c f1">
-        <div class="orb-v emb-c">299,792</div>
-        <div class="orb-l emb-c" style="opacity:.55">km/s · Speed of Light</div>
-      </div>
-      <div class="h0-orb clay-v f2">
-        <div class="orb-v emb-v">v → ∞</div>
-        <div class="orb-l emb-v" style="opacity:.55">Tachyon Velocity</div>
-      </div>
-      <div class="h0-orb clay f3">
-        <div class="orb-v emb">i · m₀</div>
-        <div class="orb-l emb" style="opacity:.55">Imaginary Rest Mass</div>
-      </div>
+<!-- ══ SECTION 0: HERO ══ -->
+<section class="sec on" id="s0">
+  <div class="h0-tag">Experimental Research Initiative · Superluminal Networks · Phase 0</div>
+  <div class="h0-title">TACHYONOVA</div>
+  <div class="h0-rule"></div>
+  <div class="h0-sub">Beyond the Speed of Light</div>
+  <div class="h0-desc">An experimental concept exploring what a blockchain would look like if governed<br>by the physics of tachyons — particles that exist only beyond light itself.</div>
+  <div class="h0-stats">
+    <div class="stat-chip f1">
+      <div class="sv">299,792 <span style="font-size:10px;opacity:.6">km/s</span></div>
+      <div class="sl">Speed of Light · c</div>
+    </div>
+    <div class="stat-chip f2">
+      <div class="sv">v → ∞</div>
+      <div class="sl">Tachyon Velocity</div>
+    </div>
+    <div class="stat-chip f3">
+      <div class="sv">i · m₀</div>
+      <div class="sl">Imaginary Rest Mass</div>
     </div>
   </div>
   <div class="h0-scroll">
@@ -311,949 +409,883 @@ canvas{position:fixed;top:0;left:0;pointer-events:none}
   </div>
 </section>
 
-<!-- ══ PANEL 1: WHAT IS ══ -->
-<section class="panel" id="P1">
-  <div class="p1-left">
-    <div class="ey">Research Overview · Field 01</div>
-    <h2 class="emb" style="font-size:clamp(28px,3.2vw,46px);line-height:1.12" data-clay-wrap>What is<br><span style="color:#9B59FF;text-shadow:0 1px 0 rgba(255,255,255,.7),0 3px 14px rgba(155,89,255,.3)">Tachyonova?</span></h2>
-    <div style="background:var(--clay);border-radius:40px;padding:28px 32px;box-shadow:var(--cs)">
-      <p class="bc" style="color:var(--text)">Tachyonova is a theoretical research project studying what a distributed ledger would look like if its architecture obeyed superluminal physics — governed not by computation time, but by the geometry of spacetime itself.</p>
-      <p style="font-family:'DM Sans',sans-serif;font-weight:500;font-size:13px;line-height:1.8;color:rgba(58,45,106,.55);margin-top:12px">Where ordinary matter's momentum diverges to infinity approaching <span style="font-family:'JetBrains Mono',monospace;color:rgba(58,45,106,.8)">c</span>, the tachyon branch begins above it — accelerating as it loses energy. The network mirrors this inversion.</p>
-      <div style="margin-top:18px">
-        <div class="cdr"><span class="cdk emb-s">Dispersion relation</span><span class="cdv emb-c">E² = p²c² − |m|²c⁴</span></div>
-        <div class="cdr"><span class="cdk emb-s">Worldline type</span><span class="cdv emb" style="color:#4A3F70">Spacelike · outside light cone</span></div>
-        <div class="cdr"><span class="cdk emb-s">Network topology</span><span class="cdv emb" style="color:#4A3F70">Quantum field lattice</span></div>
+<!-- ══ SECTION 1: WHAT IS ══ -->
+<section class="sec" id="s1">
+  <div style="display:flex;align-items:center;gap:48px;padding:0 68px;max-width:1200px">
+    <div style="flex:0 0 390px;display:flex;flex-direction:column;gap:20px">
+      <div class="ey">Research Overview · Field 01</div>
+      <div class="sh" style="font-size:clamp(27px,3.1vw,45px)">What is<br><span style="color:var(--cyan);text-shadow:0 0 26px rgba(0,210,255,0.28)">Tachyonova?</span></div>
+      <p class="bc">Tachyonova is a theoretical project studying what a distributed ledger would look like if its architecture obeyed superluminal physics. Where ordinary matter's momentum diverges at <span style="font-family:var(--f-mono);color:rgba(195,228,250,0.7)">c</span>, the tachyon branch begins above it — accelerating as it loses energy.</p>
+      <p class="bc" style="color:rgba(175,212,235,0.32)">Not a faster blockchain. An inquiry into what a blockchain would <em style="font-style:normal;color:rgba(195,228,250,0.52)">be</em> if governed by spacetime geometry rather than computation time.</p>
+      <div style="display:flex;gap:9px;margin-top:4px">
+        <div class="stat-chip f1" style="flex:1"><div class="sv" style="font-size:13px">v &gt; c</div><div class="sl">Superluminal</div></div>
+        <div class="stat-chip f2" style="flex:1"><div class="sv" style="font-size:13px">im₀</div><div class="sl">Imaginary Mass</div></div>
+        <div class="stat-chip f3" style="flex:1"><div class="sv" style="font-size:13px">Δt &lt; 0</div><div class="sl">Retrocausal</div></div>
       </div>
     </div>
-    <div style="display:flex;gap:10px">
-      <div class="clay-c f2" style="flex:1;padding:14px 18px;border-radius:40px;display:flex;flex-direction:column;gap:4px">
-        <div class="emb-c" style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:16px;letter-spacing:.08em">v &gt; c</div>
-        <div class="emb-c" style="font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:.45em;text-transform:uppercase;opacity:.6">Superluminal</div>
-      </div>
-      <div class="clay-v f3" style="flex:1;padding:14px 18px;border-radius:40px;display:flex;flex-direction:column;gap:4px">
-        <div class="emb-v" style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:16px;letter-spacing:.08em">im₀</div>
-        <div class="emb-v" style="font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:.45em;text-transform:uppercase;opacity:.6">Imaginary Mass</div>
-      </div>
-      <div class="clay-a f4" style="flex:1;padding:14px 18px;border-radius:40px;display:flex;flex-direction:column;gap:4px">
-        <div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:16px;letter-spacing:.08em;color:#5A3A0A;text-shadow:0 1px 0 rgba(255,255,255,.85),0 -1px 0 rgba(0,0,0,.15)">Δt &lt; 0</div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:.45em;text-transform:uppercase;color:rgba(90,58,10,.55);text-shadow:0 1px 0 rgba(255,255,255,.7)">Retrocausal</div>
-      </div>
-    </div>
-  </div>
-  <div class="p1-right">
-    <!-- Scene canvas draws Minkowski diagram here -->
-    <div style="position:absolute;inset:0;border:1px solid rgba(0,212,255,.1);border-radius:32px;pointer-events:none;z-index:2">
-      <div style="position:absolute;top:-1px;left:-1px;right:-1px;height:1px;background:linear-gradient(90deg,transparent,rgba(0,212,255,.45),transparent);border-radius:32px"></div>
-      <div style="position:absolute;top:14px;left:18px;font-family:'JetBrains Mono',monospace;font-size:7.5px;letter-spacing:.45em;color:rgba(0,212,255,.38);text-transform:uppercase">Minkowski Spacetime · Worldline Analysis</div>
-      <div style="position:absolute;bottom:14px;right:18px;font-family:'JetBrains Mono',monospace;font-size:7.5px;letter-spacing:.35em;color:rgba(244,241,250,.2);text-transform:uppercase;animation:blink 3s ease-in-out infinite">[ Hover to distort spacetime ]</div>
-      <div style="position:absolute;top:-1px;left:-1px;width:14px;height:14px;border-top:1px solid rgba(0,212,255,.5);border-left:1px solid rgba(0,212,255,.5)"></div>
-      <div style="position:absolute;bottom:-1px;right:-1px;width:14px;height:14px;border-bottom:1px solid rgba(0,212,255,.5);border-right:1px solid rgba(0,212,255,.5)"></div>
+    <div class="gp f2" style="flex:0 0 470px;height:415px;position:relative">
+      <div style="position:absolute;top:13px;left:16px;font-family:var(--f-mono);font-size:7.5px;letter-spacing:.44em;color:rgba(0,205,255,0.36);text-transform:uppercase;z-index:2">Minkowski Spacetime · Worldline Analysis</div>
+      <div style="position:absolute;bottom:13px;right:16px;font-family:var(--f-mono);font-size:7.5px;letter-spacing:.34em;color:rgba(210,238,255,0.18);text-transform:uppercase;z-index:2;animation:lpulse 3s ease-in-out infinite">[ Hover to distort spacetime ]</div>
+      <canvas id="cP1" style="position:absolute;inset:0;width:100%;height:100%;border-radius:22px"></canvas>
     </div>
   </div>
 </section>
 
-<!-- ══ PANEL 2: BARRIER ══ -->
-<section class="panel" id="P2">
-  <div class="p2-top">
-    <div class="ey" style="justify-content:center">Relativistic Constraint · Layer 02</div>
-    <h2 style="font-family:'Nunito',sans-serif;font-weight:900;font-size:clamp(26px,3vw,46px);letter-spacing:.06em;text-transform:uppercase;color:rgba(244,241,250,.92);text-shadow:0 4px 20px rgba(0,0,0,.5)">The <span style="color:var(--cyan);text-shadow:0 0 24px rgba(0,212,255,.5)">Light Speed</span> Barrier</h2>
-    <p style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.16em;color:rgba(244,241,250,.38);line-height:1.88;max-width:580px">In general relativity, relativistic momentum diverges to ∞ as any massive object approaches <span style="color:rgba(255,210,70,.7)">c</span>. The barrier is not a wall — it is an asymptote. Tachyons do not approach it from below. They exist only above it. This is the regime Tachyonova studies.</p>
-  </div>
-  <div class="p2-frame" style="position:relative">
-    <!-- Scene canvas draws momentum curve here -->
-    <div style="position:absolute;inset:0;border:1px solid rgba(0,212,255,.1);border-radius:24px;pointer-events:none;z-index:2">
-      <div style="position:absolute;top:-1px;left:-1px;right:-1px;height:1px;background:linear-gradient(90deg,transparent,rgba(0,212,255,.4),transparent)"></div>
-      <div style="position:absolute;top:12px;left:16px;font-family:'JetBrains Mono',monospace;font-size:7.5px;letter-spacing:.45em;color:rgba(0,212,255,.35);text-transform:uppercase">Relativistic Momentum p vs. Velocity v/c</div>
+<!-- ══ SECTION 2: BARRIER ══ -->
+<section class="sec" id="s2">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:20px;padding:48px 68px;max-width:1100px">
+    <div style="text-align:center;max-width:580px">
+      <div class="ey" style="justify-content:center;margin-bottom:12px">Relativistic Constraint · Layer 02</div>
+      <div class="sh" style="font-size:clamp(25px,3vw,44px)">The <span style="color:var(--cyan);text-shadow:0 0 22px rgba(0,210,255,0.35)">Light Speed</span> Barrier</div>
+      <p style="font-family:var(--f-mono);font-size:10px;letter-spacing:.15em;color:rgba(185,220,242,0.36);line-height:1.88;margin-top:12px">Relativistic momentum diverges to ∞ as any massive object approaches <span style="color:rgba(255,210,70,0.68)">c</span>. The barrier is not a wall — it is an asymptote. Tachyons do not approach it from below. They exist only above it.</p>
     </div>
-  </div>
-  <div class="p2-legend">
-    <div class="leg-item">
-      <div class="leg-dot" style="background:rgba(168,204,224,.55);color:rgba(168,204,224,.55)"></div>
-      <div class="leg-txt">Normal matter · momentum → ∞ as v → c</div>
+    <div class="gp" style="width:80vw;height:40vh;position:relative">
+      <div style="position:absolute;top:11px;left:15px;font-family:var(--f-mono);font-size:7.5px;letter-spacing:.44em;color:rgba(0,205,255,0.32);text-transform:uppercase;z-index:2">Relativistic Momentum p vs. Velocity v/c</div>
+      <canvas id="cP2" style="position:absolute;inset:0;width:100%;height:100%;border-radius:22px"></canvas>
     </div>
-    <div class="leg-item">
-      <div class="leg-dot" style="background:rgba(255,210,70,.72);color:rgba(255,210,70,.72)"></div>
-      <div class="leg-txt">Photon horizon · v = c · forbidden for mass</div>
-    </div>
-    <div class="leg-item">
-      <div class="leg-dot" style="background:rgba(0,212,255,.85);color:rgba(0,212,255,.85)"></div>
-      <div class="leg-txt">Tachyon branch · p decreases as v increases</div>
+    <div style="display:flex;gap:28px">
+      <div style="display:flex;align-items:center;gap:8px"><div style="width:7px;height:7px;border-radius:50%;background:rgba(195,220,245,0.5);box-shadow:0 0 5px rgba(195,220,245,0.4)"></div><div style="font-family:var(--f-mono);font-size:7.5px;letter-spacing:.32em;color:rgba(195,224,245,0.36);text-transform:uppercase">Normal matter · momentum → ∞ as v → c</div></div>
+      <div style="display:flex;align-items:center;gap:8px"><div style="width:7px;height:7px;border-radius:50%;background:rgba(255,210,70,0.7);box-shadow:0 0 5px rgba(255,210,70,0.4)"></div><div style="font-family:var(--f-mono);font-size:7.5px;letter-spacing:.32em;color:rgba(195,224,245,0.36);text-transform:uppercase">Photon horizon · v = c</div></div>
+      <div style="display:flex;align-items:center;gap:8px"><div style="width:7px;height:7px;border-radius:50%;background:rgba(0,210,255,0.82);box-shadow:0 0 7px rgba(0,210,255,0.5)"></div><div style="font-family:var(--f-mono);font-size:7.5px;letter-spacing:.32em;color:rgba(195,224,245,0.36);text-transform:uppercase">Tachyon branch · p decreases as v increases</div></div>
     </div>
   </div>
 </section>
 
-<!-- ══ PANEL 3: TACHYON CORE ══ -->
-<section class="panel" id="P3">
-  <div class="p3-left">
-    <!-- Scene canvas draws core here -->
-    <div style="position:absolute;inset:-30px;pointer-events:none;z-index:1">
-      <div style="position:absolute;inset:30px;border-radius:50%;border:1px solid rgba(0,212,255,.08);animation:cf1 20s linear infinite"></div>
-      <div style="position:absolute;inset:10px;border-radius:50%;border:1px dashed rgba(155,89,255,.06);animation:cf2 30s linear infinite reverse"></div>
-    </div>
-  </div>
-  <div class="p3-right">
-    <div class="ey">Protocol Engine · Specimen 001</div>
-    <h2 class="emb" style="font-size:clamp(28px,3vw,46px);line-height:1.1">The <span style="color:#9B59FF;text-shadow:0 1px 0 rgba(255,255,255,.7),0 3px 14px rgba(155,89,255,.35)">Tachyon</span><br>Core</h2>
-    <div class="formula-pill f1">E² = p²c² − |m|²c⁴</div>
-    <div class="dglass" style="padding:0 20px">
-      <div class="spec-row"><span class="sk">State Propagation</span><span class="sv">Instantaneous · field-mode</span></div>
-      <div class="spec-row"><span class="sk">Consensus Latency</span><span class="sv">Δt → 0</span></div>
-      <div class="spec-row"><span class="sk">Computation model</span><span class="sv">Quantum field superposition</span></div>
-      <div class="spec-row"><span class="sk">Imaginary mass</span><span class="sv">−0.182 eV/c²</span></div>
-      <div class="spec-row"><span class="sk">Spacetime index</span><span class="sv">i · φ (1.618)</span></div>
-    </div>
-    <p class="bc" style="max-width:340px;color:rgba(244,241,250,.42)">At the centre of the Tachyonova model sits a conceptual engine — a region where state transitions are treated as quantum field events rather than sequential computations. Information does not travel through it. It propagates <em style="font-style:normal;color:rgba(244,241,250,.65)">across</em> it simultaneously.</p>
-  </div>
-</section>
-
-<!-- ══ PANEL 4: QPOS LATTICE ══ -->
-<section class="panel" id="P4">
-  <div class="p4-top">
-    <div class="ey" style="justify-content:center">Distributed Architecture · Layer 04</div>
-    <h2 style="font-family:'Nunito',sans-serif;font-weight:900;font-size:clamp(26px,3vw,46px);letter-spacing:.06em;text-transform:uppercase;color:rgba(244,241,250,.92);text-shadow:0 4px 20px rgba(0,0,0,.5)">The <span style="color:var(--cyan);text-shadow:0 0 24px rgba(0,212,255,.5)">Frozen</span> Protocol</h2>
-    <p style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.15em;color:rgba(244,241,250,.35);line-height:1.88;max-width:560px"><span style="color:var(--cyan)">QPoS</span> — Quantum Proof-of-Stake — treats each Crystal Node not as a sequential processor, but as a fixed point in a quantum field lattice. They do not vote on state. They collapse into it — simultaneously, like entangled particles measuring the same observable.</p>
-  </div>
-  <div class="p4-frame" style="position:relative">
-    <div style="position:absolute;inset:0;border:1px solid rgba(0,212,255,.1);border-radius:24px;pointer-events:none;z-index:2">
-      <div style="position:absolute;top:-1px;left:-1px;right:-1px;height:1px;background:linear-gradient(90deg,transparent,rgba(0,212,255,.42),transparent)"></div>
-      <div style="position:absolute;top:12px;left:16px;font-family:'JetBrains Mono',monospace;font-size:7.5px;letter-spacing:.45em;color:rgba(0,212,255,.35);text-transform:uppercase">Crystal Node Lattice · QPoS Consensus · 144 Nodes</div>
-      <div style="position:absolute;bottom:12px;right:16px;font-family:'JetBrains Mono',monospace;font-size:7.5px;letter-spacing:.35em;color:rgba(244,241,250,.18);text-transform:uppercase;animation:blink 3s ease-in-out infinite">[ Hover to activate nodes ]</div>
-    </div>
-  </div>
-  <div class="p4-stats">
-    <div class="p4-stat clay-c f1" style="border-radius:40px 0 0 40px">
-      <div class="psv emb-c">∞</div><div class="psl emb-c" style="opacity:.55">Theoretical TPS</div>
-    </div>
-    <div class="p4-stat clay-v f2">
-      <div class="psv emb-v">Δt → 0</div><div class="psl emb-v" style="opacity:.55">Block Finality</div>
-    </div>
-    <div class="p4-stat clay f3">
-      <div class="psv emb">144</div><div class="psl emb" style="opacity:.55">Crystal Nodes</div>
-    </div>
-    <div class="p4-stat clay-g f4" style="border-radius:0 40px 40px 0">
-      <div class="psv" style="font-family:'Nunito',sans-serif;font-weight:900;font-size:22px;color:#074A2E;text-shadow:0 1px 0 rgba(255,255,255,.82),0 -1px 0 rgba(0,0,0,.14)">QPoS</div><div class="psl" style="color:rgba(7,74,46,.52);text-shadow:0 1px 0 rgba(255,255,255,.65)">Quantum Consensus</div>
-    </div>
-  </div>
-</section>
-
-<!-- ══ PANEL 5: FUTURE ══ -->
-<section class="panel" id="P5">
-  <div class="p5-left">
-    <div class="ey">Research Status · Phase 0 — Active</div>
-    <h2 style="font-family:'Nunito',sans-serif;font-weight:900;font-size:clamp(32px,4.5vw,64px);letter-spacing:.06em;text-transform:uppercase;color:rgba(244,241,250,.92);line-height:1.1;text-shadow:0 4px 20px rgba(0,0,0,.5)">A Long<br><span style="color:rgba(155,89,255,.9);text-shadow:0 0 30px rgba(155,89,255,.4)">Scientific</span><br>Journey</h2>
-    <p class="bc" style="max-width:380px">Tachyonova is not yet a network. It is a question posed to physics — an inquiry into whether superluminal particle mechanics can inform a new generation of distributed systems.</p>
-    <p class="bc" style="max-width:380px;color:rgba(244,241,250,.32)">What follows — blockchain simulations, cryptographic architecture, decentralised physics-inspired consensus — will emerge as the research matures. Some journeys cannot be rushed.</p>
-  </div>
-  <div class="p5-right">
-    <div class="phase-card clay f2">
-      <div class="ph-dot" style="background:rgba(0,212,255,.85);box-shadow:0 0 8px rgba(0,212,255,.5)"></div>
-      <div>
-        <div class="ph-title emb-c" style="color:rgba(10,80,128,.7)">Phase 0 · Now</div>
-        <div class="ph-body emb-s">Concept development · Visual identity · Research narrative · Interactive prototypes · Branding</div>
+<!-- ══ SECTION 3: CORE ══ -->
+<section class="sec" id="s3">
+  <div style="display:flex;align-items:center;gap:60px;padding:0 68px;max-width:1200px">
+    <!-- Three.js core is the visual — spacer for layout -->
+    <div style="flex:0 0 380px;height:380px"></div>
+    <div style="flex:0 0 370px;display:flex;flex-direction:column;gap:18px">
+      <div class="ey">Protocol Engine · Specimen 001</div>
+      <div class="sh" style="font-size:clamp(27px,3vw,44px)">The <span style="color:var(--cyan);text-shadow:0 0 26px rgba(0,210,255,0.28)">Tachyon</span><br>Core</div>
+      <div style="display:inline-flex;padding:9px 16px;background:rgba(0,0,0,0.28);border:1px solid rgba(155,89,255,0.22);border-radius:100px;font-family:var(--f-mono);font-size:12px;color:rgba(155,89,255,0.82);letter-spacing:.06em;text-shadow:0 0 10px rgba(155,89,255,0.38)">E² = p²c² − |m|²c⁴</div>
+      <div class="gp" style="padding:0 18px">
+        <div class="dr"><span class="dk">State Propagation</span><span class="dv">Instantaneous · field-mode</span></div>
+        <div class="dr"><span class="dk">Consensus Latency</span><span class="dv">Δt → 0</span></div>
+        <div class="dr"><span class="dk">Computation Model</span><span class="dv">Quantum field superposition</span></div>
+        <div class="dr"><span class="dk">Imaginary Mass</span><span class="dv">−0.182 eV/c²</span></div>
+        <div class="dr"><span class="dk">Spacetime Index</span><span class="dv">i · φ (1.618)</span></div>
       </div>
+      <p class="bc" style="max-width:340px;color:rgba(175,212,235,0.38)">A region where state transitions are treated as quantum field events, not sequential computations. Information propagates <em style="font-style:normal;color:rgba(195,224,250,0.55)">across</em> it simultaneously.</p>
     </div>
-    <div class="phase-card clay-v f3">
-      <div class="ph-dot" style="background:rgba(155,89,255,.5);box-shadow:0 0 8px rgba(155,89,255,.3)"></div>
-      <div>
-        <div class="ph-title emb-v" style="opacity:.6">Phase 1 · Pending</div>
-        <div class="ph-body emb-v" style="opacity:.55">QPoS whitepaper · Blockchain simulation · Cryptographic research · Crystal Node specification</div>
+  </div>
+</section>
+
+<!-- ══ SECTION 4: PROTOCOL ══ -->
+<section class="sec" id="s4">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:18px;padding:42px 54px;max-width:1200px">
+    <div style="text-align:center;max-width:580px">
+      <div class="ey" style="justify-content:center;margin-bottom:11px">Distributed Architecture · Layer 04</div>
+      <div class="sh" style="font-size:clamp(25px,3vw,44px)">The <span style="color:var(--cyan);text-shadow:0 0 22px rgba(0,210,255,0.35)">Frozen</span> Protocol</div>
+      <p style="font-family:var(--f-mono);font-size:10px;letter-spacing:.13em;color:rgba(185,220,242,0.34);line-height:1.88;margin-top:11px"><span style="color:var(--cyan)">QPoS</span> — Quantum Proof-of-Stake — Crystal Nodes do not vote on state. They collapse into it simultaneously, like entangled particles measuring the same observable.</p>
+    </div>
+    <div class="gp" style="width:86vw;height:46vh;position:relative">
+      <div style="position:absolute;top:11px;left:15px;font-family:var(--f-mono);font-size:7.5px;letter-spacing:.44em;color:rgba(0,205,255,0.32);text-transform:uppercase;z-index:2">Crystal Node Lattice · QPoS Consensus · 144 Nodes</div>
+      <div style="position:absolute;bottom:11px;right:15px;font-family:var(--f-mono);font-size:7.5px;letter-spacing:.32em;color:rgba(210,238,255,0.16);text-transform:uppercase;z-index:2;animation:lpulse 3s ease-in-out infinite">[ Hover to activate nodes ]</div>
+      <canvas id="cP4" style="position:absolute;inset:0;width:100%;height:100%;border-radius:22px"></canvas>
+    </div>
+    <div style="display:flex;gap:9px">
+      <div class="stat-chip f1" style="align-items:center"><div class="sv">∞</div><div class="sl">Theoretical TPS</div></div>
+      <div class="stat-chip f2" style="align-items:center"><div class="sv">Δt → 0</div><div class="sl">Block Finality</div></div>
+      <div class="stat-chip f3" style="align-items:center"><div class="sv">144</div><div class="sl">Crystal Nodes</div></div>
+      <div class="stat-chip f1" style="align-items:center"><div class="sv" style="color:var(--violet);text-shadow:0 0 10px rgba(155,89,255,0.4)">QPoS</div><div class="sl">Quantum Consensus</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SECTION 5: FUTURE ══ -->
+<section class="sec" id="s5">
+  <div style="display:flex;align-items:center;gap:48px;padding:0 9vw;max-width:1200px">
+    <div style="flex:0 0 400px;display:flex;flex-direction:column;gap:18px">
+      <div style="display:inline-flex;align-items:center;gap:9px;padding:6px 16px;background:rgba(155,89,255,0.09);border:1px solid rgba(155,89,255,0.2);border-radius:100px;backdrop-filter:blur(10px)">
+        <div style="width:5px;height:5px;background:var(--violet);border-radius:50%;box-shadow:0 0 7px var(--violet);animation:fl1 1.8s ease-in-out infinite"></div>
+        <div style="font-family:var(--f-mono);font-size:7.5px;letter-spacing:.46em;color:rgba(155,89,255,0.72);text-transform:uppercase">Research Status · Phase 0 — Active</div>
       </div>
+      <div class="sh" style="font-size:clamp(30px,4.5vw,62px)">A Long<br><span style="color:rgba(155,89,255,0.86);text-shadow:0 0 28px rgba(155,89,255,0.36)">Scientific</span><br>Journey</div>
+      <p class="bc">Tachyonova is not yet a network. It is a question posed to physics — an inquiry into whether superluminal mechanics can inform a new generation of distributed systems.</p>
+      <p class="bc" style="color:rgba(175,212,235,0.28)">What follows will emerge as the research matures. Some journeys cannot be rushed.</p>
     </div>
-    <div class="phase-card clay-g f4">
-      <div class="ph-dot" style="border:1px solid rgba(0,200,120,.3);background:transparent"></div>
-      <div>
-        <div class="ph-title" style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.5em;text-transform:uppercase;color:rgba(7,74,46,.45);margin-bottom:6px;text-shadow:0 1px 0 rgba(255,255,255,.7)">Phase ∞ · Unknown</div>
-        <div class="ph-body" style="font-family:'DM Sans',sans-serif;font-weight:500;font-size:12px;line-height:1.75;color:rgba(7,74,46,.45);text-shadow:0 1px 0 rgba(255,255,255,.6)">Decentralised network · Crystal Node testnet · Open research protocol · Community science</div>
+    <div style="flex:1;max-width:390px;display:flex;flex-direction:column;gap:11px">
+      <div class="gp f1" style="display:flex;gap:14px;align-items:flex-start;padding:17px 18px;border-radius:20px">
+        <div style="width:7px;height:7px;border-radius:50%;background:rgba(0,210,255,0.82);box-shadow:0 0 7px rgba(0,210,255,0.5);flex-shrink:0;margin-top:3px"></div>
+        <div>
+          <div style="font-family:var(--f-mono);font-size:7.5px;letter-spacing:.46em;text-transform:uppercase;color:rgba(0,210,255,0.65);margin-bottom:5px">Phase 0 · Now</div>
+          <div style="font-family:var(--f-mono);font-size:9.5px;letter-spacing:.1em;color:rgba(185,220,242,0.42);line-height:1.7">Concept development · Visual identity · Research narrative · Interactive prototypes</div>
+        </div>
+      </div>
+      <div class="gp f2" style="display:flex;gap:14px;align-items:flex-start;padding:17px 18px;border-radius:20px;opacity:.72">
+        <div style="width:7px;height:7px;border-radius:50%;border:1px solid rgba(155,89,255,0.32);flex-shrink:0;margin-top:3px"></div>
+        <div>
+          <div style="font-family:var(--f-mono);font-size:7.5px;letter-spacing:.46em;text-transform:uppercase;color:rgba(155,89,255,0.46);margin-bottom:5px">Phase 1 · Pending</div>
+          <div style="font-family:var(--f-mono);font-size:9.5px;letter-spacing:.1em;color:rgba(185,220,242,0.3);line-height:1.7">QPoS whitepaper · Blockchain simulation · Cryptographic research · Crystal Node spec</div>
+        </div>
+      </div>
+      <div class="gp f3" style="display:flex;gap:14px;align-items:flex-start;padding:17px 18px;border-radius:20px;opacity:.38">
+        <div style="width:7px;height:7px;border-radius:50%;border:1px solid rgba(195,224,245,0.14);flex-shrink:0;margin-top:3px"></div>
+        <div>
+          <div style="font-family:var(--f-mono);font-size:7.5px;letter-spacing:.46em;text-transform:uppercase;color:rgba(195,224,245,0.2);margin-bottom:5px">Phase ∞ · Unknown</div>
+          <div style="font-family:var(--f-mono);font-size:9.5px;letter-spacing:.1em;color:rgba(185,220,242,0.2);line-height:1.7">Decentralised network · Crystal Node testnet · Open research protocol</div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ══ PANEL 6: MONUMENT ══ -->
-<section class="panel" id="P6">
-  <div class="mon-wrap">
-    <div class="mon-carved">TACHYONOVA</div>
-    <div class="mon-rule"></div>
-    <div class="mon-sub">Beyond the Speed of Light</div>
-    <div class="mon-desc">A gateway to exploring networks beyond the limits of conventional physics. The research has no finish line — only deeper questions, and the willingness to follow them into the dark.</div>
-    <div class="mon-cta">
-      <button class="btn-clay-c" id="btnField">Enter the Field</button>
-      <button class="btn-clay-v" id="btnPaper">Read the Paper</button>
+<!-- ══ SECTION 6: MONUMENT ══ -->
+<section class="sec" id="s6">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:9px;pointer-events:none">
+    <div style="font-family:'Nunito',sans-serif;font-weight:900;font-size:clamp(36px,7vw,106px);letter-spacing:.22em;color:transparent;-webkit-text-stroke:1px rgba(185,222,245,0.25);text-shadow:0 0 70px rgba(0,200,255,0.05),0 3px 8px rgba(0,0,0,0.88);text-transform:uppercase;animation:moncarve 4s ease-in-out infinite">TACHYONOVA</div>
+    <div style="height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);box-shadow:0 0 7px var(--cyan);animation:monrule 3.2s ease-in-out infinite"></div>
+    <div style="font-family:var(--f-body);font-size:clamp(9px,.95vw,13px);letter-spacing:.5em;color:rgba(190,222,245,0.4);text-transform:uppercase">Beyond the Speed of Light</div>
+    <div style="font-family:var(--f-mono);font-size:9.5px;letter-spacing:.14em;color:rgba(180,215,238,0.26);max-width:420px;text-align:center;line-height:1.9;margin-top:3px">A gateway to exploring networks beyond the limits<br>of conventional physics. No finish line — only deeper questions.</div>
+    <div style="display:flex;gap:14px;margin-top:22px;pointer-events:all">
+      <button class="fbtn fbtn-ice" id="btnField">Enter the Field</button>
+      <button class="fbtn fbtn-ghost" id="btnPaper">Read the Paper</button>
     </div>
   </div>
 </section>
 
-<!-- WORLDLINE NAV -->
-<div id="WL">
-  <div class="wl on" onclick="go(0)"><div class="wl-lbl">Origin</div><div class="wl-tube"></div></div>
-  <div class="wl" onclick="go(1)"><div class="wl-lbl">Theory</div><div class="wl-tube"></div></div>
-  <div class="wl" onclick="go(2)"><div class="wl-lbl">Barrier</div><div class="wl-tube"></div></div>
-  <div class="wl" onclick="go(3)"><div class="wl-lbl">Core</div><div class="wl-tube"></div></div>
-  <div class="wl" onclick="go(4)"><div class="wl-lbl">Lattice</div><div class="wl-tube"></div></div>
-  <div class="wl" onclick="go(5)"><div class="wl-lbl">Future</div><div class="wl-tube"></div></div>
-  <div class="wl" onclick="go(6)"><div class="wl-lbl">Monument</div><div class="wl-tube"></div></div>
+<!-- ── WORLDLINE NAV ── -->
+<div id="wlnav">
+  <div class="wl on" data-i="0"><div class="wl-lbl">Origin</div><div class="wl-tube"></div></div>
+  <div class="wl" data-i="1"><div class="wl-lbl">Theory</div><div class="wl-tube"></div></div>
+  <div class="wl" data-i="2"><div class="wl-lbl">Barrier</div><div class="wl-tube"></div></div>
+  <div class="wl" data-i="3"><div class="wl-lbl">Core</div><div class="wl-tube"></div></div>
+  <div class="wl" data-i="4"><div class="wl-lbl">Lattice</div><div class="wl-tube"></div></div>
+  <div class="wl" data-i="5"><div class="wl-lbl">Future</div><div class="wl-tube"></div></div>
+  <div class="wl" data-i="6"><div class="wl-lbl">Monument</div><div class="wl-tube"></div></div>
 </div>
 
-<!-- MODAL -->
-<div id="MODAL">
+<!-- ── MODAL ── -->
+<div id="modal">
   <div class="m-box">
     <div class="m-topbar"></div>
     <div class="m-head">
-      <div><div class="m-ew" id="MEW"></div><div class="m-title" id="MT"></div></div>
-      <button class="m-close" id="MC">✕</button>
+      <div><div class="m-ew" id="mew"></div><div class="m-title" id="mt"></div></div>
+      <button class="m-close" id="mc">✕</button>
     </div>
     <div class="m-rule"></div>
-    <div class="m-body" id="MB"></div>
+    <div class="m-body" id="mb"></div>
   </div>
 </div>
 
+<!-- THREE.JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-// ═══════════════════════════════════════════════════════
-//  STATE
-// ═══════════════════════════════════════════════════════
-let W=window.innerWidth,H=window.innerHeight;
-let mx=W/2,my=H/2,cur=0,lock=false,bgT=0,scT=0;
+'use strict';
+// ═══════════════════════════════════════════════════════════════
+//  THREE.JS ICE CAVE ENVIRONMENT
+// ═══════════════════════════════════════════════════════════════
+let W = window.innerWidth, H = window.innerHeight;
+let curSec = 0, navLock = false;
+let mx = W / 2, my = H / 2;
 
-// ── LOADER ──
-window.addEventListener('load',()=>{
-  document.getElementById('LF').style.width='100%';
-  setTimeout(()=>{document.getElementById('LOAD').classList.add('out');boot()},3100);
+// ── SCENE ──────────────────────────────────────────────────────
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x061420);
+scene.fog = new THREE.FogExp2(0x061420, 0.052);
+
+// ── CAMERA ─────────────────────────────────────────────────────
+const camera = new THREE.PerspectiveCamera(58, W / H, 0.1, 80);
+camera.position.set(0, 2.2, 10.5);
+camera.lookAt(0, 0.4, 0);
+
+// Camera targets per section
+const CAM = [
+  { x:0, y:2.2, z:10.5, lx:0, ly:0.4, lz:0 },   // 0 hero
+  { x:-1.2, y:2.0, z:9.8, lx:0, ly:0.2, lz:0 },  // 1 what is
+  { x:1.2, y:2.0, z:9.8, lx:0, ly:0.2, lz:0 },   // 2 barrier
+  { x:0, y:0.8, z:5.8, lx:0, ly:0, lz:0 },        // 3 core zoom
+  { x:0, y:0.5, z:11.2, lx:0, ly:0, lz:0 },       // 4 protocol
+  { x:0, y:3.8, z:10.8, lx:0, ly:1, lz:-2 },      // 5 future (look up)
+  { x:0, y:2.4, z:14.5, lx:0, ly:0.5, lz:0 },     // 6 monument
+];
+
+// ── RENDERER ───────────────────────────────────────────────────
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(W, H);
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.88;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.domElement.id = 'three-canvas';
+Object.assign(renderer.domElement.style, {
+  position:'fixed', top:'0', left:'0', zIndex:'0', width:'100%', height:'100%'
+});
+document.body.insertBefore(renderer.domElement, document.body.firstChild);
+
+window.addEventListener('resize', () => {
+  W = window.innerWidth; H = window.innerHeight;
+  camera.aspect = W / H; camera.updateProjectionMatrix();
+  renderer.setSize(W, H);
 });
 
-function boot(){
-  W=window.innerWidth;H=window.innerHeight;
-  setupNav();setupCursor();setupInput();
-  initBG();initScene();initP1();initP2();initP4lattice();
-}
-window.addEventListener('resize',()=>{W=window.innerWidth;H=window.innerHeight});
+// ── LIGHTS ─────────────────────────────────────────────────────
+// Ambient — cold ice cave baseline
+const ambL = new THREE.AmbientLight(0x0A1E38, 0.95);
+scene.add(ambL);
 
-// ── NAV ──
-function setupNav(){
-  const w=document.getElementById('NDOTS');
-  for(let i=0;i<7;i++){
-    const d=document.createElement('div');
-    d.className='nd'+(i===0?' on':'');
-    d.onclick=()=>go(i);w.appendChild(d);
+// Aurora glow lights — come through the ice ceiling
+const auroraData = [
+  { col: 0x00EE88, pos: [-7, 10, -9],  int: 3.2, dist: 30 },  // green aurora
+  { col: 0x00CCFF, pos: [ 5,  9, -7],  int: 2.6, dist: 26 },  // cyan aurora
+  { col: 0xAA44FF, pos: [ 0,  8,-12],  int: 2.0, dist: 28 },  // violet aurora
+];
+const auroraLights = [];
+auroraData.forEach(d => {
+  const l = new THREE.PointLight(d.col, d.int, d.dist);
+  l.position.set(...d.pos);
+  scene.add(l);
+  auroraLights.push({ light: l, base: d });
+});
+
+// Core internal glow
+const coreGlowL = new THREE.PointLight(0x0099EE, 5.0, 9);
+coreGlowL.position.set(0, 0, 0);
+scene.add(coreGlowL);
+
+// Soft fill from below (ice floor bounce)
+const fillL = new THREE.PointLight(0x0055AA, 0.8, 18);
+fillL.position.set(0, -3, 4);
+scene.add(fillL);
+
+// Directional — faint top-down
+const dirL = new THREE.DirectionalLight(0x1A3A5A, 0.45);
+dirL.position.set(2, 12, 4);
+dirL.castShadow = true;
+dirL.shadow.mapSize.width = 1024; dirL.shadow.mapSize.height = 1024;
+scene.add(dirL);
+
+// ── MATERIALS ──────────────────────────────────────────────────
+const iceMat = new THREE.MeshPhysicalMaterial({
+  color: 0xBBD8EE, roughness: 0.14, metalness: 0,
+  transparent: true, opacity: 0.52, side: THREE.DoubleSide,
+});
+const iceWallMat = new THREE.MeshPhysicalMaterial({
+  color: 0x9EC8E0, roughness: 0.18, metalness: 0,
+  transparent: true, opacity: 0.62, side: THREE.FrontSide,
+});
+const darkIceMat = new THREE.MeshStandardMaterial({
+  color: 0x0A2035, roughness: 0.45, metalness: 0.05,
+});
+const iceFloorMat = new THREE.MeshStandardMaterial({
+  color: 0x6AAAC8, roughness: 0.04, metalness: 0.06,
+});
+const stalMat = new THREE.MeshPhysicalMaterial({
+  color: 0xCCECFF, roughness: 0.07, metalness: 0,
+  transparent: true, opacity: 0.68, side: THREE.DoubleSide,
+});
+
+// ── ICE FLOOR ──────────────────────────────────────────────────
+const floorGeo = new THREE.PlaneGeometry(60, 60, 28, 28);
+(function crackFloor() {
+  const pos = floorGeo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    pos.setZ(i, (Math.random() - 0.5) * 0.06);
   }
-}
-function refreshNav(){
-  document.querySelectorAll('.nd').forEach((d,i)=>d.classList.toggle('on',i===cur));
-  document.querySelectorAll('.wl').forEach((d,i)=>d.classList.toggle('on',i===cur));
-  document.getElementById('NI').textContent=String(cur+1).padStart(2,'0');
-}
-function go(i){
-  if(i===cur||lock)return;
-  lock=true;cur=i;
-  document.querySelectorAll('.panel').forEach((p,j)=>p.classList.toggle('on',j===cur));
-  refreshNav();
-  setTimeout(()=>lock=false,950);
-}
-function next(){go(Math.min(cur+1,6))}
-function prev(){go(Math.max(cur-1,0))}
-
-function setupInput(){
-  let lw=0;
-  window.addEventListener('wheel',e=>{const n=Date.now();if(n-lw<900)return;lw=n;e.deltaY>0?next():prev();},{passive:true});
-  window.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowDown')next();if(e.key==='ArrowLeft'||e.key==='ArrowUp')prev();});
-  let tx=0;
-  window.addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});
-  window.addEventListener('touchend',e=>{const d=tx-e.changedTouches[0].clientX;if(Math.abs(d)>50){d>0?next():prev();}},{passive:true});
-}
-
-// ── CURSOR ──
-function setupCursor(){
-  const c=document.getElementById('CUR'),c2=document.getElementById('CUR2');
-  let rx=mx,ry=my;
-  document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;c.style.left=mx+'px';c.style.top=my+'px';});
-  (function loop(){rx+=(mx-rx)*.1;ry+=(my-ry)*.1;c2.style.left=rx+'px';c2.style.top=ry+'px';requestAnimationFrame(loop)})();
-  document.querySelectorAll('button,.nd,.wl').forEach(el=>{
-    el.addEventListener('mouseenter',()=>document.body.classList.add('clay-hov'));
-    el.addEventListener('mouseleave',()=>document.body.classList.remove('clay-hov'));
-  });
-  document.addEventListener('click',e=>{
-    const r=document.createElement('div');r.className='rip';
-    r.style.cssText=`left:${e.clientX}px;top:${e.clientY}px`;
-    document.body.appendChild(r);setTimeout(()=>r.remove(),700);
-  });
-}
-
-// ═══════════════════════════════════════════════════════
-//  BG CANVAS — Antarctic environment
-// ═══════════════════════════════════════════════════════
-function initBG(){
-  const cv=document.getElementById('cBG'),ctx=cv.getContext('2d');
-  let stars=[];
-  function genStars(){
-    stars=Array.from({length:240},()=>({x:Math.random()*W,y:Math.random()*H*.65,r:Math.random()*.9+.1,o:Math.random()}));
-  }
-  function sz(){cv.width=W;cv.height=H;genStars();}
-  sz();window.addEventListener('resize',sz);
-  const snow=Array.from({length:220},()=>({x:Math.random(),y:Math.random(),r:Math.random()*1.3+.2,vx:(Math.random()-.5)*.00055,vy:Math.random()*.00065+.00022,o:Math.random()*.52+.1}));
-  const motes=Array.from({length:55},()=>({x:Math.random(),y:Math.random(),r:Math.random()*1.7+.4,vx:(Math.random()-.5)*.0014,vy:(Math.random()-.5)*.0014,o:Math.random()*.2+.04,hue:Math.random()>.5?186:168}));
-
-  function loop(){
-    const w=W,h=H;
-    ctx.clearRect(0,0,w,h);
-    // Deep sky gradient
-    const sky=ctx.createLinearGradient(0,0,0,h);
-    sky.addColorStop(0,'#04060F');sky.addColorStop(.42,'#060A18');sky.addColorStop(.7,'#080C1C');sky.addColorStop(1,'#04060E');
-    ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
-    // Stars
-    stars.forEach(s=>{
-      ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-      ctx.fillStyle=`rgba(255,255,255,${s.o*(.2+Math.sin(bgT*.38+s.x*.012)*.1)})`;ctx.fill();
-    });
-    // Aurora australis — multi-colour, vibrant
-    const auroras=[
-      [168,'100%','55%',.055,.038],[188,'100%','58%',.042,.028],[200,'90%','62%',.035,.022],[288,'85%','58%',.028,.018],[148,'100%','52%',.022,.015]
-    ];
-    auroras.forEach(([hue,s_,l_,a,da],bi)=>{
-      const g=ctx.createLinearGradient(0,0,0,h*.6);
-      g.addColorStop(0,`hsla(${hue},${s_},${l_},0)`);
-      g.addColorStop(.07+bi*.025,`hsla(${hue},${s_},${l_},${a+Math.sin(bgT*.55+bi)*da})`);
-      g.addColorStop(.32+bi*.04,`hsla(${hue+35},90%,${l_},${a*.7+Math.sin(bgT*.38+bi*.8)*da*.5})`);
-      g.addColorStop(.55,`hsla(${hue+70},80%,52%,${a*.3})`);
-      g.addColorStop(1,'hsla(0,0%,0%,0)');
-      ctx.fillStyle=g;ctx.fillRect(0,0,w,h*.6);
-    });
-    // Glacier walls
-    function wall(side){
-      const lx=side?w:0,rx=side?w-170:170;
-      const g=ctx.createLinearGradient(lx,0,rx,0);
-      g.addColorStop(0,'rgba(2,5,16,1)');g.addColorStop(.5,'rgba(0,18,48,.52)');g.addColorStop(1,'rgba(0,0,0,0)');
-      ctx.beginPath();ctx.moveTo(lx,0);ctx.lineTo(rx,0);
-      for(let y=0;y<h;y+=5){
-        const xw=rx+(side?-1:1)*(Math.sin(y*.022+bgT*.1)*26+Math.sin(y*.052)*14);
-        ctx.lineTo(xw,y);
-      }
-      ctx.lineTo(lx,h);ctx.closePath();ctx.fillStyle=g;ctx.fill();
-      // Ice edge shimmer
-      ctx.beginPath();ctx.moveTo(rx,0);
-      for(let y=0;y<h;y+=5)ctx.lineTo(rx+(side?-1:1)*(Math.sin(y*.022+bgT*.1)*26+Math.sin(y*.052)*14),y);
-      ctx.strokeStyle=`rgba(0,220,255,${.038+Math.sin(bgT*.3)*.016})`;ctx.lineWidth=.65;ctx.stroke();
-    }
-    wall(false);wall(true);
-    // Glacier floor
-    const y0=h*.72;
-    const gf=ctx.createLinearGradient(0,y0,0,h);
-    gf.addColorStop(0,'rgba(0,12,30,0)');gf.addColorStop(.05,'rgba(0,14,36,.6)');gf.addColorStop(.32,'rgba(0,10,26,.88)');gf.addColorStop(1,'rgba(0,3,12,1)');
-    ctx.fillStyle=gf;ctx.fillRect(0,y0,w,h-y0);
-    // Ice surface line
-    ctx.beginPath();ctx.moveTo(0,y0);
-    for(let x=0;x<=w;x+=4)ctx.lineTo(x,y0+Math.sin(x*.013+bgT*.26)*3.5+Math.sin(x*.007-bgT*.19)*5.5);
-    ctx.strokeStyle=`rgba(0,220,255,${.07+Math.sin(bgT*.42)*.04})`;ctx.lineWidth=.75;ctx.stroke();
-    const ig=ctx.createLinearGradient(0,y0,0,y0+55);
-    ig.addColorStop(0,`rgba(0,200,255,${.04+Math.sin(bgT*.52)*.022})`);ig.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.fillStyle=ig;ctx.fillRect(0,y0,w,55);
-    // Subsurface veins
-    for(let v=0;v<7;v++){
-      const vx=w*(.05+v*.14)+Math.sin(bgT*.1+v)*20;
-      const vg=ctx.createLinearGradient(vx,y0,vx,h);
-      vg.addColorStop(0,`rgba(0,210,255,${.055+Math.sin(bgT*.5+v)*.028})`);
-      vg.addColorStop(.45,`rgba(0,100,200,${.025+Math.sin(bgT*.35+v)*.012})`);
-      vg.addColorStop(1,'rgba(0,0,50,0)');
-      ctx.beginPath();ctx.moveTo(vx,y0);
-      for(let vy=y0;vy<=h;vy+=3)ctx.lineTo(vx+Math.sin(vy*.038+bgT*.42+v)*7,vy);
-      ctx.strokeStyle=vg;ctx.lineWidth=.85+Math.sin(bgT*.4+v)*.3;ctx.stroke();
-    }
-    // Snow
-    snow.forEach(s=>{
-      s.x+=s.vx+(mx/W-.5)*.00028;s.y+=s.vy;
-      if(s.y>1){s.y=0;s.x=Math.random();}if(s.x<0)s.x=1;if(s.x>1)s.x=0;
-      ctx.beginPath();ctx.arc(s.x*w,s.y*h,s.r,0,Math.PI*2);
-      ctx.fillStyle=`rgba(210,230,252,${s.o})`;ctx.fill();
-    });
-    // Motes
-    motes.forEach(m=>{
-      const dx=mx/W-m.x,dy=my/H-m.y,d=Math.sqrt(dx*dx+dy*dy);
-      if(d<.18){m.vx+=dx*d*.003;m.vy+=dy*d*.003;}
-      m.vx*=.992;m.vy*=.992;m.x+=m.vx;m.y+=m.vy;
-      if(m.x<0||m.x>1)m.vx*=-1;if(m.y<0||m.y>1)m.vy*=-1;
-      ctx.beginPath();ctx.arc(m.x*w,m.y*h,m.r,0,Math.PI*2);
-      ctx.fillStyle=`hsla(${m.hue},100%,74%,${m.o})`;ctx.fill();
-    });
-    bgT+=.007;requestAnimationFrame(loop);
-  }
-  loop();
-}
-
-// ═══════════════════════════════════════════════════════
-//  CLAY ORB HELPER (canvas-drawn claymorphic sphere)
-// ═══════════════════════════════════════════════════════
-function drawClayOrb(ctx,x,y,r,baseLight,baseDark,energy,t){
-  // Drop shadow
-  const ds=ctx.createRadialGradient(x,y+r*.5,0,x,y+r*.6,r*1.4);
-  ds.addColorStop(0,`rgba(0,0,0,${.35*energy})`);ds.addColorStop(1,'rgba(0,0,0,0)');
-  ctx.fillStyle=ds;ctx.beginPath();ctx.arc(x,y+r*.2,r*1.3,0,Math.PI*2);ctx.fill();
-  // Base clay body
-  const base=ctx.createRadialGradient(x-r*.28,y-r*.32,0,x,y,r);
-  base.addColorStop(0,baseLight);base.addColorStop(.45,baseDark);
-  base.addColorStop(.82,shadeDown(baseDark,.18));base.addColorStop(1,shadeDown(baseDark,.3));
-  ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=base;ctx.fill();
-  // Top highlight (simulates clay matte surface)
-  const hi=ctx.createRadialGradient(x-r*.32,y-r*.42,0,x-r*.08,y-r*.18,r*.62);
-  hi.addColorStop(0,'rgba(255,255,255,.78)');hi.addColorStop(.45,'rgba(255,255,255,.22)');hi.addColorStop(1,'rgba(255,255,255,0)');
-  ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=hi;ctx.fill();
-  // Bottom rim shadow
-  const rim=ctx.createRadialGradient(x+r*.22,y+r*.32,0,x+r*.06,y+r*.14,r*.88);
-  rim.addColorStop(0,`rgba(0,0,0,${.22*energy})`);rim.addColorStop(1,'rgba(0,0,0,0)');
-  ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=rim;ctx.fill();
-  // Subtle energy glow overlay
-  if(energy>0.3){
-    const glow=ctx.createRadialGradient(x,y,0,x,y,r);
-    glow.addColorStop(0,`rgba(0,212,255,${energy*.15})`);glow.addColorStop(1,'rgba(0,212,255,0)');
-    ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=glow;ctx.fill();
-  }
-}
-function shadeDown(hex,amount){
-  // Simple alpha darkening via rgba overlay interpretation
-  return hex; // just return same, the gradient already handles it
-}
-
-// ═══════════════════════════════════════════════════════
-//  SCENE CANVAS — per-panel 3D content
-// ═══════════════════════════════════════════════════════
-function initScene(){
-  const cv=document.getElementById('cSCENE'),ctx=cv.getContext('2d');
-  function sz(){cv.width=W;cv.height=H;}
-  sz();window.addEventListener('resize',sz);
-
-  // ── Hero / P3 Core data ──
-  const cOrbs=Array.from({length:280},(_,i)=>({a:Math.random()*Math.PI*2,r:Math.random()*120+18,sp:(Math.random()>.5?1:-1)*(.012+Math.random()*.009),sz:Math.random()*1.6+.3,o:Math.random()*.85+.15,layer:Math.floor(Math.random()*3),trail:[],tl:Math.floor(Math.random()*28+8)}));
-  const cBurst=Array.from({length:70},()=>({a:Math.random()*Math.PI*2,d:Math.random()*40,md:Math.random()*185+65,sp:Math.random()*1.8+.5,r:Math.random()*.9+.3,o:Math.random(),col:Math.random()>.5?'0,212,255':'155,89,255'}));
-
-  // ── Monument snow ──
-  const mSnow=Array.from({length:300},()=>({x:Math.random(),y:Math.random(),r:Math.random()*1.8+.2,vx:(Math.random()-.5)*.00042,vy:Math.random()*.00075+.00022,o:Math.random()*.52+.1}));
-
-  // ── Future supernova ──
-  const snPts=Array.from({length:380},()=>{
-    const a=Math.random()*Math.PI*2,d=Math.random()*.44;
-    return{a,d,sp:(Math.random()*.0024+.0004)*(d<.18?.25:1),r:Math.random()*2.2+.3,o:Math.random()*.82+.2,col:Math.random()>.55?'0,212,255':Math.random()>.5?'155,89,255':'255,185,70',frozen:Math.random()>.28};
-  });
-
-  // ── P1 Minkowski ──
-  const nPts=Array.from({length:16},()=>({prog:Math.random(),sp:.0038+Math.random()*.003}));
-  const tPts=Array.from({length:16},()=>({prog:Math.random(),sp:.0055+Math.random()*.004,trail:[]}));
-  let p1hov=false,p1hx=0,p1hy=0;
-  document.getElementById('P1').addEventListener('mousemove',e=>{p1hx=e.clientX;p1hy=e.clientY;p1hov=true;});
-  document.getElementById('P1').addEventListener('mouseleave',()=>p1hov=false);
-
-  // ── P2 Momentum ──
-  const nm2Pts=Array.from({length:14},()=>({prog:Math.random(),sp:.003+Math.random()*.003}));
-  const t2Pts=Array.from({length:12},()=>({prog:Math.random(),sp:.0038+Math.random()*.0045,trail:[]}));
-
-  // ── DRAW CORE (hero P0 + detail P3) ──
-  function drawCore(t,detailed){
-    const w=W,h=H;
-    const cx=detailed?w*.32:w*.5, cy=h*.5-(detailed?30:65);
-    const R=Math.min(w,h)*(detailed?.14:.115)+Math.sin(t*2)*6;
-    const mdx=(mx-cx)/w*(detailed?12:18),mdy=(my-cy)/h*(detailed?8:12);
-    const ccx=cx+mdx,ccy=cy+mdy;
-
-    // Outer halo
-    const halo=ctx.createRadialGradient(ccx,ccy,R*.5,ccx,ccy,R*2.8);
-    halo.addColorStop(0,`rgba(0,200,232,${.1+Math.sin(t*2)*.04})`);
-    halo.addColorStop(.4,'rgba(0,80,180,.04)');halo.addColorStop(.7,'rgba(107,31,190,.02)');halo.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.beginPath();ctx.arc(ccx,ccy,R*2.8,0,Math.PI*2);ctx.fillStyle=halo;ctx.fill();
-
-    // Orbital particle trails
-    cOrbs.forEach(p=>{
-      p.a+=p.sp;
-      const lr=R*(.52+p.layer*.32);
-      const px=ccx+Math.cos(p.a)*lr,py=ccy+Math.sin(p.a)*lr*.55;
-      p.trail.push({x:px,y:py});if(p.trail.length>p.tl)p.trail.shift();
-      if(p.trail.length>1){
-        for(let ti=1;ti<p.trail.length;ti++){
-          const pr=ti/p.trail.length;
-          ctx.beginPath();ctx.moveTo(p.trail[ti-1].x,p.trail[ti-1].y);ctx.lineTo(p.trail[ti].x,p.trail[ti].y);
-          const hue=p.layer===0?188:p.layer===1?268:210;
-          ctx.strokeStyle=`hsla(${hue},100%,74%,${pr*p.o*.42})`;ctx.lineWidth=p.sz*pr;ctx.stroke();
-        }
-      }
-      ctx.beginPath();ctx.arc(px,py,p.sz*.65,0,Math.PI*2);
-      ctx.fillStyle=`hsla(${p.layer===0?188:p.layer===1?268:210},100%,80%,${p.o})`;ctx.fill();
-    });
-
-    // ICE BLOCK around core
-    const bw=R*2.2,bh=R*2.4,bx=ccx-bw/2,by=ccy-bh/2,br=18;
-    function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();}
-
-    // Ice glow field
-    const iceField=ctx.createRadialGradient(ccx,ccy,0,ccx,ccy,bw*1.2);
-    iceField.addColorStop(0,`rgba(0,200,255,${.06+Math.sin(t*1.5)*.025})`);
-    iceField.addColorStop(.5,'rgba(0,100,200,.02)');iceField.addColorStop(1,'rgba(0,0,0,0)');
-    rr(ctx,bx-30,by-30,bw+60,bh+60,30);ctx.fillStyle=iceField;ctx.fill();
-
-    // Ice block body
-    ctx.save();rr(ctx,bx,by,bw,bh,br);ctx.clip();
-    const iceFill=ctx.createLinearGradient(bx,by,bx+bw,by+bh);
-    iceFill.addColorStop(0,'rgba(190,238,255,.13)');iceFill.addColorStop(.4,'rgba(140,210,255,.08)');iceFill.addColorStop(.7,'rgba(100,180,255,.1)');iceFill.addColorStop(1,'rgba(80,150,255,.14)');
-    ctx.fillStyle=iceFill;ctx.fillRect(bx,by,bw,bh);
-    // Caustic shimmer inside ice
-    for(let ci=0;ci<6;ci++){
-      const cx2=bx+bw*(.12+ci*.14+Math.sin(t*.28+ci)*.05);
-      const cy2=by+bh*(.1+ci*.12+Math.cos(t*.22+ci)*.04);
-      const cg=ctx.createRadialGradient(cx2,cy2,0,cx2,cy2,bw*.14);
-      cg.addColorStop(0,`rgba(255,255,255,${.055+Math.sin(t+ci)*.025})`);cg.addColorStop(1,'rgba(255,255,255,0)');
-      ctx.fillStyle=cg;ctx.fillRect(bx,by,bw,bh);
-    }
-    // Ice cracks
-    ctx.strokeStyle='rgba(180,230,255,.06)';ctx.lineWidth=.5;
-    for(let c=0;c<7;c++){
-      ctx.beginPath();let cpx=ccx+Math.cos(c*.9)*R*.15,cpy=ccy+Math.sin(c*.9)*R*.1;
-      ctx.moveTo(cpx,cpy);
-      for(let s=0;s<4;s++){const ang=c*.9+(Math.random()-.5)*.7;const len=15+Math.random()*25;cpx+=Math.cos(ang)*len;cpy+=Math.sin(ang)*len*.85;ctx.lineTo(cpx,cpy);}
-      ctx.stroke();
-    }
-    // Core liquid-glass sphere inside ice
-    const sg=ctx.createRadialGradient(ccx-R*.28,ccy-R*.3,0,ccx,ccy,R);
-    sg.addColorStop(0,`rgba(175,235,255,${.4+Math.sin(t*3)*.08})`);
-    sg.addColorStop(.18,`rgba(0,172,245,${.28+Math.sin(t*2)*.06})`);
-    sg.addColorStop(.5,'rgba(0,60,150,.22)');sg.addColorStop(.72,'rgba(55,0,110,.18)');sg.addColorStop(1,'rgba(15,0,55,.24)');
-    ctx.beginPath();ctx.arc(ccx,ccy,R,0,Math.PI*2);ctx.fillStyle=sg;ctx.fill();
-    // Momentum curves INSIDE sphere (dispersion relation visualization)
-    ctx.save();ctx.beginPath();ctx.arc(ccx,ccy,R*.9,0,Math.PI*2);ctx.clip();
-    for(let mc=0;mc<4;mc++){
-      const ma=(mc/4)*Math.PI+t*.08;
-      ctx.beginPath();
-      for(let xi=0;xi<=1;xi+=.02){
-        const ang=ma+xi*Math.PI*.8;
-        const rad=R*(.3+xi*.45+Math.sin(t*2+mc+xi*4)*.06);
-        const px_=ccx+Math.cos(ang)*rad,py_=ccy+Math.sin(ang)*rad*.65;
-        xi===0?ctx.moveTo(px_,py_):ctx.lineTo(px_,py_);
-      }
-      const mcg=ctx.createLinearGradient(ccx-R,ccy,ccx+R,ccy);
-      mcg.addColorStop(0,'rgba(0,212,255,0)');
-      mcg.addColorStop(.4,`rgba(0,212,255,${.35+Math.sin(t*2.5+mc)*.12})`);
-      mcg.addColorStop(.7,`rgba(155,89,255,${.28+Math.sin(t*2+mc)*.1})`);
-      mcg.addColorStop(1,'rgba(155,89,255,0)');
-      ctx.strokeStyle=mcg;ctx.lineWidth=1.4;ctx.stroke();
-    }
-    ctx.restore();
-    // Facets
-    for(let fi=0;fi<8;fi++){
-      const fa=(fi/8)*Math.PI*2+t*.05;
-      const fx=ccx+Math.cos(fa)*R*.62,fy=ccy+Math.sin(fa)*R*.62;
-      const ff=ctx.createRadialGradient(fx,fy,0,fx,fy,R*.38);
-      ff.addColorStop(0,`rgba(255,255,255,${.05+Math.sin(t*2.5+fi)*.022})`);ff.addColorStop(1,'rgba(255,255,255,0)');
-      ctx.fillStyle=ff;ctx.beginPath();ctx.arc(fx,fy,R*.38,0,Math.PI*2);ctx.fill();
-    }
-    // Hot center
-    const hc=ctx.createRadialGradient(ccx,ccy,0,ccx,ccy,R*.35);
-    hc.addColorStop(0,`rgba(225,250,255,${.58+Math.sin(t*4)*.12})`);
-    hc.addColorStop(.15,`rgba(80,205,255,${.32+Math.sin(t*3)*.07})`);hc.addColorStop(.5,'rgba(0,130,220,.12)');hc.addColorStop(1,'rgba(0,80,180,0)');
-    ctx.fillStyle=hc;ctx.fillRect(bx,by,bw,bh);
-    ctx.restore(); // unclip ice
-    // Ice rim
-    rr(ctx,bx,by,bw,bh,br);ctx.strokeStyle=`rgba(0,210,255,${.14+Math.sin(t*1.5)*.06})`;ctx.lineWidth=1.2;ctx.stroke();
-    // Top rim glass highlight
-    const rimHi=ctx.createLinearGradient(bx,by,bx,by+28);
-    rimHi.addColorStop(0,'rgba(255,255,255,.28)');rimHi.addColorStop(1,'rgba(255,255,255,0)');
-    rr(ctx,bx,by,bw,bh,br);ctx.strokeStyle=rimHi;ctx.lineWidth=1.5;ctx.stroke();
-    // Sphere rim glow
-    ctx.beginPath();ctx.arc(ccx,ccy,R,0,Math.PI*2);
-    ctx.strokeStyle=`rgba(0,210,255,${.26+Math.sin(t*2)*.08})`;ctx.lineWidth=1.2;ctx.stroke();
-    // Energy burst particles outside ice
-    cBurst.forEach(b=>{
-      b.d+=b.sp*.22;if(b.d>b.md){b.d=0;b.a=Math.random()*Math.PI*2;}
-      const pr=b.d/b.md;
-      const bpx=ccx+Math.cos(b.a)*(R*1.1+b.d),bpy=ccy+Math.sin(b.a)*(R*.58+b.d*.5);
-      ctx.beginPath();ctx.arc(bpx,bpy,b.r,0,Math.PI*2);
-      ctx.fillStyle=`rgba(${b.col},${b.o*(1-pr)*.52})`;ctx.fill();
-    });
-    // Energy beams
-    for(let eb=0;eb<8;eb++){
-      const eba=(eb/8)*Math.PI*2+t*.18;
-      const ebl=55+Math.sin(t*3+eb)*30;
-      const ebx1=ccx+Math.cos(eba)*R,eby1=ccy+Math.sin(eba)*R*.56;
-      const ebx2=ccx+Math.cos(eba)*(R+ebl),eby2=ccy+Math.sin(eba)*(R*.56+ebl*.46);
-      const ebg=ctx.createLinearGradient(ebx1,eby1,ebx2,eby2);
-      ebg.addColorStop(0,`rgba(0,212,255,${.2+Math.sin(t*2+eb)*.08})`);ebg.addColorStop(1,'rgba(0,212,255,0)');
-      ctx.beginPath();ctx.moveTo(ebx1,eby1);ctx.lineTo(ebx2,eby2);ctx.strokeStyle=ebg;ctx.lineWidth=.7;ctx.stroke();
-    }
-    // Ground reflection
-    ctx.beginPath();ctx.ellipse(ccx,H*.745+14,R*1.4,15,0,0,Math.PI*2);
-    const gr=ctx.createRadialGradient(ccx,H*.745+14,0,ccx,H*.745+14,R*1.4);
-    gr.addColorStop(0,`rgba(0,210,255,${.04+Math.sin(t*2)*.02})`);gr.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.fillStyle=gr;ctx.fill();
-  }
-
-  // ── DRAW MINKOWSKI (P1) ──
-  function drawMinkowski(t){
-    const w=W,h=H;
-    const left=w*.52,top=h*.14,pw=w*.42,ph=h*.7;
-    const ox=left,oy=top+ph,sc=Math.min(pw,ph)*.86;
-
-    // Background for this region
-    const bg=ctx.createLinearGradient(left,top,left,top+ph);
-    bg.addColorStop(0,'rgba(1,5,18,.97)');bg.addColorStop(1,'rgba(2,8,24,.97)');
-    ctx.fillStyle=bg;
-    ctx.beginPath();ctx.roundRect(left-1,top-1,pw+2,ph+2,31);ctx.fill();
-
-    // Grid
-    for(let gi=0;gi<=10;gi++){
-      const gx=ox+gi*sc/9;if(gx<left||gx>left+pw)continue;
-      ctx.beginPath();ctx.moveTo(gx,top);ctx.lineTo(gx,oy);ctx.strokeStyle='rgba(0,212,255,.03)';ctx.lineWidth=.5;ctx.stroke();
-      const gy=oy-gi*sc/9;if(gy>top&&gy<oy){ctx.beginPath();ctx.moveTo(left,gy);ctx.lineTo(left+pw,gy);ctx.strokeStyle='rgba(0,212,255,.03)';ctx.lineWidth=.5;ctx.stroke();}
-    }
-    // Axes
-    ctx.beginPath();ctx.moveTo(ox,oy-5);ctx.lineTo(ox,top+10);ctx.strokeStyle='rgba(244,241,250,.15)';ctx.lineWidth=.7;ctx.stroke();
-    ctx.beginPath();ctx.moveTo(ox-5,oy);ctx.lineTo(left+pw-10,oy);ctx.strokeStyle='rgba(244,241,250,.15)';ctx.lineWidth=.7;ctx.stroke();
-    ctx.fillStyle='rgba(244,241,250,.28)';ctx.font='8px "JetBrains Mono",monospace';ctx.textAlign='center';
-    ctx.fillText('x (space)',left+pw*.6,oy+14);
-    ctx.save();ctx.translate(ox-14,oy-ph*.28);ctx.rotate(-Math.PI/2);ctx.fillText('ct (time)',0,0);ctx.restore();
-    // Light cone
-    ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(ox+sc*.88,oy-sc*.88);
-    const lcg=ctx.createLinearGradient(ox,oy,ox+sc*.88,oy-sc*.88);
-    lcg.addColorStop(0,'rgba(255,210,70,.55)');lcg.addColorStop(1,'rgba(255,210,70,.06)');
-    ctx.strokeStyle=lcg;ctx.lineWidth=1.1;ctx.setLineDash([4,5]);ctx.stroke();ctx.setLineDash([]);
-    ctx.fillStyle='rgba(255,210,70,.44)';ctx.font='8px "JetBrains Mono",monospace';ctx.textAlign='left';
-    ctx.fillText('v = c',ox+sc*.36,oy-sc*.3);
-    ctx.save();ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(ox+sc*.88,oy-sc*.88);ctx.lineTo(ox+sc*.88,oy);ctx.closePath();
-    ctx.fillStyle='rgba(255,210,70,.01)';ctx.fill();ctx.restore();
-    // Normal worldline
-    ctx.beginPath();
-    for(let xi=0;xi<=1;xi+=.004){
-      const gx=ox+xi*sc*.82,ty=Math.sqrt((xi*.7)**2+.08)-.283;
-      const gy=oy-ty*sc*1.18;if(gy<top||gy>oy)continue;
-      xi===0?ctx.moveTo(gx,gy):ctx.lineTo(gx,gy);
-    }
-    ctx.strokeStyle='rgba(200,215,240,.42)';ctx.lineWidth=1.3;ctx.stroke();
-    ctx.fillStyle='rgba(200,215,240,.35)';ctx.font='8px "JetBrains Mono",monospace';ctx.textAlign='left';
-    ctx.fillText('v < c',ox+sc*.04,oy-sc*.22);
-    // Tachyon worldline
-    ctx.beginPath();
-    for(let xi=0;xi<=1;xi+=.004){
-      const gx=ox+xi*sc*.9,gy=oy-xi*.33*sc*.72;
-      if(gy<top||gy>oy)continue;xi===0?ctx.moveTo(gx,gy):ctx.lineTo(gx,gy);
-    }
-    const tcg=ctx.createLinearGradient(ox,oy,ox+sc*.9,oy-sc*.24);
-    tcg.addColorStop(0,'rgba(0,212,255,.82)');tcg.addColorStop(1,'rgba(0,212,255,.1)');
-    ctx.strokeStyle=tcg;ctx.lineWidth=1.6;ctx.stroke();
-    ctx.fillStyle='rgba(0,212,255,.52)';ctx.font='8px "JetBrains Mono",monospace';
-    ctx.fillText('v > c (tachyon)',ox+sc*.35,oy-sc*.07);
-    // Hover distortion
-    if(p1hov){
-      const dg=ctx.createRadialGradient(p1hx,p1hy,0,p1hx,p1hy,95);
-      dg.addColorStop(0,'rgba(155,89,255,.08)');dg.addColorStop(1,'rgba(0,0,0,0)');
-      ctx.fillStyle=dg;ctx.fillRect(left,top,pw,ph);
-      for(let di=0;di<6;di++){
-        ctx.beginPath();ctx.moveTo(p1hx,p1hy);ctx.lineTo(p1hx+Math.cos((di/6)*Math.PI*2)*36,p1hy+Math.sin((di/6)*Math.PI*2)*36);
-        ctx.strokeStyle=`rgba(155,89,255,${.1+Math.sin(t*3+di)*.05})`;ctx.lineWidth=.5;ctx.stroke();
-      }
-    }
-    // Particles
-    nPts.forEach(p=>{p.prog=(p.prog+p.sp)%1;if(p.prog>.98)p.prog=0;
-      const xi=p.prog*.97,gx=ox+xi*sc*.82,ty=Math.sqrt((xi*.7)**2+.08)-.283,gy=oy-ty*sc*1.18;
-      if(gy<top||gy>oy)return;ctx.beginPath();ctx.arc(gx,gy,2.4,0,Math.PI*2);ctx.fillStyle='rgba(200,215,240,.62)';ctx.fill();
-    });
-    tPts.forEach(p=>{p.prog=(p.prog+p.sp)%1;
-      const gx=ox+p.prog*sc*.9,gy=oy-p.prog*.33*sc*.72;
-      if(!p.trail)p.trail=[];p.trail.push({x:gx,y:gy});if(p.trail.length>24)p.trail.shift();
-      if(p.trail.length>1){for(let ti=1;ti<p.trail.length;ti++){const pr=ti/p.trail.length;ctx.beginPath();ctx.moveTo(p.trail[ti-1].x,p.trail[ti-1].y);ctx.lineTo(p.trail[ti].x,p.trail[ti].y);ctx.strokeStyle=`rgba(0,212,255,${pr*.55})`;ctx.lineWidth=1.4*pr;ctx.stroke();}}
-      ctx.beginPath();ctx.arc(gx,gy,3,0,Math.PI*2);ctx.fillStyle='rgba(0,212,255,.88)';ctx.fill();
-      const pg=ctx.createRadialGradient(gx,gy,0,gx,gy,12);pg.addColorStop(0,'rgba(0,212,255,.2)');pg.addColorStop(1,'rgba(0,212,255,0)');ctx.fillStyle=pg;ctx.fillRect(gx-12,gy-12,24,24);
-    });
-  }
-
-  // ── DRAW MOMENTUM CURVE (P2) ──
-  function drawMomentum(t){
-    const w=W,h=H;
-    const left=w*.09,top=h*.38,pw=w*.82,ph=h*.44;
-    const pl={l:65,r:40,t:36,b:50};
-    const aw=pw-pl.l-pl.r,ah=ph-pl.t-pl.b;
-    const ox=left+pl.l,oy=top+pl.t+ah;
-
-    // BG
-    const bg=ctx.createLinearGradient(left,top,left,top+ph);
-    bg.addColorStop(0,'rgba(1,5,18,.97)');bg.addColorStop(1,'rgba(2,8,24,.97)');
-    ctx.fillStyle=bg;ctx.beginPath();ctx.roundRect(left-1,top-1,pw+2,ph+2,23);ctx.fill();
-
-    // Grid
-    for(let gi=0;gi<=8;gi++){
-      const gx=ox+gi*aw/8;ctx.beginPath();ctx.moveTo(gx,top+pl.t);ctx.lineTo(gx,oy);ctx.strokeStyle='rgba(0,212,255,.03)';ctx.lineWidth=.5;ctx.stroke();
-      ctx.fillStyle='rgba(244,241,250,.2)';ctx.font='7px "JetBrains Mono",monospace';ctx.textAlign='center';ctx.fillText((gi/8).toFixed(1)+'c',gx,oy+13);
-    }
-    for(let gi=0;gi<=5;gi++){
-      const gy=oy-gi*ah/5;ctx.beginPath();ctx.moveTo(ox,gy);ctx.lineTo(ox+aw,gy);ctx.strokeStyle='rgba(0,212,255,.03)';ctx.lineWidth=.5;ctx.stroke();
-    }
-    // Axes
-    ctx.beginPath();ctx.moveTo(ox,top+pl.t);ctx.lineTo(ox,oy);ctx.lineTo(ox+aw,oy);ctx.strokeStyle='rgba(244,241,250,.16)';ctx.lineWidth=.8;ctx.stroke();
-    ctx.fillStyle='rgba(244,241,250,.25)';ctx.font='8px "JetBrains Mono",monospace';ctx.textAlign='center';ctx.fillText('velocity (v/c)',ox+aw*.5,oy+28);
-    ctx.save();ctx.translate(ox-42,oy-ah*.5);ctx.rotate(-Math.PI/2);ctx.fillText('relativistic momentum  p',0,0);ctx.restore();
-    // Light barrier
-    const bx=ox+aw;
-    const bgg=ctx.createLinearGradient(bx-18,0,bx+4,0);bgg.addColorStop(0,'rgba(255,210,70,0)');bgg.addColorStop(.5,'rgba(255,210,70,.1)');bgg.addColorStop(1,'rgba(255,210,70,0)');
-    ctx.fillStyle=bgg;ctx.fillRect(bx-18,top+pl.t,22,ah);
-    ctx.beginPath();ctx.moveTo(bx,top+pl.t);ctx.lineTo(bx,oy);ctx.strokeStyle=`rgba(255,210,70,${.3+Math.sin(t*2)*.08})`;ctx.lineWidth=.9;ctx.setLineDash([4,5]);ctx.stroke();ctx.setLineDash([]);
-    ctx.fillStyle='rgba(255,210,70,.42)';ctx.font='9px "JetBrains Mono",monospace';ctx.textAlign='center';ctx.fillText('c',bx,top+pl.t-7);
-    // Normal matter curve
-    ctx.beginPath();
-    for(let vi=0;vi<=.999;vi+=.003){const gx=ox+vi*aw,pv=vi/Math.sqrt(1-vi*vi+.0001);const gy=oy-Math.min(pv,5.5)*ah/5.7;vi===0?ctx.moveTo(gx,gy):ctx.lineTo(gx,gy);}
-    const nmg=ctx.createLinearGradient(ox,oy,ox+aw*.9,top+pl.t+12);nmg.addColorStop(0,'rgba(200,215,240,.48)');nmg.addColorStop(1,'rgba(200,215,240,.1)');
-    ctx.strokeStyle=nmg;ctx.lineWidth=1.5;ctx.stroke();
-    ctx.fillStyle='rgba(200,215,240,.32)';ctx.font='8px "JetBrains Mono",monospace';ctx.textAlign='left';ctx.fillText('v < c',ox+7,top+pl.t+17);
-    // Tachyon curve
-    ctx.beginPath();let fT=true;
-    for(let vi=1.02;vi<=4.5;vi+=.02){
-      const gx=ox+aw+(vi-1)/3.5*aw*.2;if(gx>left+pw+8)break;
-      const pv=vi/Math.sqrt(vi*vi-1),gy=oy-Math.min(pv,5.5)*ah/5.7;
-      if(fT){ctx.moveTo(gx,top+pl.t+2);fT=false;}ctx.lineTo(gx,gy);
-    }
-    ctx.strokeStyle='rgba(0,212,255,.68)';ctx.lineWidth=1.6;ctx.stroke();
-    // Tachyon zone tint
-    ctx.save();ctx.beginPath();ctx.rect(bx,top+pl.t,aw*.22,ah);ctx.fillStyle='rgba(0,212,255,.014)';ctx.fill();ctx.restore();
-    ctx.fillStyle='rgba(0,212,255,.22)';ctx.font='7.5px "JetBrains Mono",monospace';ctx.textAlign='left';ctx.fillText('superluminal',bx+5,top+pl.t+18);
-    // Normal particles
-    nm2Pts.forEach(p=>{p.prog=(p.prog+p.sp)%1;if(p.prog>.99)p.prog=0;
-      const vi=p.prog*.97,gx=ox+vi*aw,pv=vi/Math.sqrt(1-vi*vi+.0001),gy=oy-Math.min(pv,5.5)*ah/5.7;
-      ctx.beginPath();ctx.arc(gx,gy,2.3,0,Math.PI*2);ctx.fillStyle='rgba(200,215,240,.58)';ctx.fill();
-    });
-    // Tachyon particles
-    t2Pts.forEach(p=>{p.prog=(p.prog+p.sp)%1;
-      const vi=1.05+p.prog*2.5,gx=ox+aw+(vi-1)/3.5*aw*.2;if(gx>left+pw+8)return;
-      const pv=vi/Math.sqrt(vi*vi-1),gy=oy-Math.min(pv,5.5)*ah/5.7;
-      if(!p.trail)p.trail=[];p.trail.push({x:gx,y:gy});if(p.trail.length>20)p.trail.shift();
-      if(p.trail.length>1){for(let ti=1;ti<p.trail.length;ti++){const pr=ti/p.trail.length;ctx.beginPath();ctx.moveTo(p.trail[ti-1].x,p.trail[ti-1].y);ctx.lineTo(p.trail[ti].x,p.trail[ti].y);ctx.strokeStyle=`rgba(0,212,255,${pr*.5})`;ctx.lineWidth=pr*1.8;ctx.stroke();}}
-      ctx.beginPath();ctx.arc(gx,gy,2.8,0,Math.PI*2);ctx.fillStyle='rgba(0,212,255,.88)';ctx.fill();
-    });
-  }
-
-  // ── DRAW FUTURE (P5) ──
-  function drawFuture(t){
-    const w=W,h=H,cx=w*.5,cy=h*.5,mR=Math.min(w,h)*.42;
-    // Cavern atmosphere
-    const cav=ctx.createRadialGradient(cx,cy,0,cx,cy,mR*2.1);
-    cav.addColorStop(0,'rgba(0,10,38,.45)');cav.addColorStop(.5,'rgba(0,4,16,.55)');cav.addColorStop(1,'rgba(0,0,6,.65)');
-    ctx.fillStyle=cav;ctx.fillRect(0,0,w,h);
-    // Expansion rings
-    [[1,.062],[.68,.05],[.38,.04],[.18,.032],[.07,.024]].forEach(([f,a],ri)=>{
-      const rr=mR*f*(1+Math.sin(t*.4+ri)*.04);const hue=ri<2?264:ri<3?218:186;
-      ctx.beginPath();ctx.arc(cx,cy,rr,0,Math.PI*2);ctx.strokeStyle=`hsla(${hue},90%,60%,${a+Math.sin(t*1.5+ri)*.013})`;ctx.lineWidth=.8;ctx.stroke();
-    });
-    snPts.forEach(p=>{
-      if(!p.frozen)p.d+=p.sp;else p.d+=p.sp*.08;if(p.d>.5){p.d=0;p.a=Math.random()*Math.PI*2;}
-      const px=cx+Math.cos(p.a)*p.d*w*.88,py=cy+Math.sin(p.a)*p.d*h*.68;
-      const fade=p.frozen?.55:1;
-      const grd=ctx.createRadialGradient(px,py,0,px,py,p.r*3.8);
-      grd.addColorStop(0,`rgba(${p.col},${p.o*fade*(p.frozen?.58+Math.sin(t*2+p.d*8)*.22:1)})`);grd.addColorStop(1,`rgba(${p.col},0)`);
-      ctx.beginPath();ctx.arc(px,py,p.r*3.8,0,Math.PI*2);ctx.fillStyle=grd;ctx.fill();
-      ctx.beginPath();ctx.arc(px,py,p.r*.65,0,Math.PI*2);ctx.fillStyle=`rgba(${p.col},${p.o*fade})`;ctx.fill();
-    });
-    // Central core
-    const cs=52+Math.sin(t*2)*11;
-    const cg=ctx.createRadialGradient(cx,cy,0,cx,cy,cs*2.1);
-    cg.addColorStop(0,`rgba(255,252,245,${.88+Math.sin(t*5)*.04})`);cg.addColorStop(.12,`rgba(110,208,255,${.55+Math.sin(t*3)*.08})`);
-    cg.addColorStop(.35,`rgba(107,31,190,${.16+Math.sin(t*2)*.055})`);cg.addColorStop(.65,'rgba(255,88,38,.05)');cg.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.beginPath();ctx.arc(cx,cy,cs*2.1,0,Math.PI*2);ctx.fillStyle=cg;ctx.fill();
-    const wh=ctx.createRadialGradient(cx,cy,0,cx,cy,cs*.26);wh.addColorStop(0,'rgba(255,255,255,1)');wh.addColorStop(1,'rgba(255,255,255,0)');
-    ctx.beginPath();ctx.arc(cx,cy,cs*.26,0,Math.PI*2);ctx.fillStyle=wh;ctx.fill();
-  }
-
-  // ── DRAW MONUMENT (P6) ──
-  function drawMonument(t){
-    const w=W,h=H;
-    mSnow.forEach(s=>{
-      s.x+=s.vx+(mx/W-.5)*.0003;s.y+=s.vy;
-      if(s.y>1){s.y=0;s.x=Math.random();}if(s.x<0)s.x=1;if(s.x>1)s.x=0;
-      ctx.beginPath();ctx.arc(s.x*w,s.y*h,s.r,0,Math.PI*2);
-      ctx.fillStyle=`rgba(208,228,250,${s.o*(.42+Math.sin(t*1.5+s.x*8)*.18)})`;ctx.fill();
-    });
-    // Ice cracks
-    [[-0.3,.3],[0.55,.25],[-1.2,.21],[2.9,.28],[1.85,.23],[-2.15,.18],[0.9,.17]].forEach(([ang,len])=>{
-      ctx.beginPath();let cx2=w*.5,cy2=h*.5,steps=10;ctx.moveTo(cx2,cy2);
-      for(let s=0;s<steps;s++){const j=Math.sin(s*7.3+ang*10)*18;cx2+=Math.cos(ang+j*.025)*len*w/steps;cy2+=Math.sin(ang+j*.025)*len*h*.45/steps;ctx.lineTo(cx2,cy2);}
-      ctx.strokeStyle=`rgba(0,212,255,${.038+Math.sin(t+ang)*.015})`;ctx.lineWidth=.6;ctx.stroke();
-    });
-    for(let v=0;v<8;v++){
-      const vx=w*(.04+v*.13);
-      const vg=ctx.createLinearGradient(vx,h,vx,h*.58);
-      vg.addColorStop(0,`rgba(0,210,255,${.058+Math.sin(t+v)*.028})`);vg.addColorStop(1,'rgba(0,210,255,0)');
-      ctx.beginPath();ctx.moveTo(vx,h);
-      for(let vy=h;vy>=h*.58;vy-=4)ctx.lineTo(vx+Math.sin(vy*.05+t*.45+v)*7,vy);
-      ctx.strokeStyle=vg;ctx.lineWidth=.8;ctx.stroke();
-    }
-  }
-
-  function loop(){
-    ctx.clearRect(0,0,W,H);
-    if(cur===0)drawCore(scT,false);
-    if(cur===1)drawMinkowski(scT);
-    if(cur===2)drawMomentum(scT);
-    if(cur===3)drawCore(scT,true);
-    if(cur===5)drawFuture(scT);
-    if(cur===6)drawMonument(scT);
-    scT+=.014;requestAnimationFrame(loop);
-  }
-  loop();
-}
-
-// ═══════════════════════════════════════════════════════
-//  P1 PANEL — hover area for spacetime interaction
-// ═══════════════════════════════════════════════════════
-function initP1(){}  // hover is handled in scene canvas listener
-
-// ═══════════════════════════════════════════════════════
-//  P2 PANEL — nothing additional needed
-// ═══════════════════════════════════════════════════════
-function initP2(){}
-
-// ═══════════════════════════════════════════════════════
-//  P4 CLAY ORB LATTICE — drawn in scene canvas
-// ═══════════════════════════════════════════════════════
-function initP4lattice(){
-  // The QPoS lattice is drawn in the scene canvas when cur===4
-  // We handle hover activation here
-  const frame=document.querySelector('#P4 .p4-frame');
-  if(frame){
-    frame.style.pointerEvents='all';
-    frame.addEventListener('mousemove',e=>{
-      window._p4mx=e.clientX;window._p4my=e.clientY;
-    });
-  }
-}
-
-// Override scene loop to include P4 lattice drawing
-// We patch initScene to also handle cur===4
-(function patchScene(){
-  // Build lattice data BEFORE any function calls use it
-  const nodes=[];
-  const edges=[];
-  const cols=12,rows=12;
-  // We defer node building to first draw since we need W,H
-  let nodesBuilt=false;
-
-  function buildNodes(w,h){
-    nodes.length=0;edges.length=0;
-    const fw=w*.85,fh=h*.84,left=w*.5-fw/2,top=h*.13;
-    for(let r=0;r<rows;r++){
-      for(let c=0;c<cols;c++){
-        const xf=(c+.5)/cols+(r%2===0?0:.5/cols),yf=(r+.5)/rows;
-        nodes.push({x:left+xf*fw,y:top+yf*fh,r:5+Math.random()*3.5,energy:Math.random()*.28,phase:Math.random()*Math.PI*2,sp:.008+Math.random()*.018,xf,yf});
-      }
-    }
-    for(let i=0;i<nodes.length;i++){
-      for(let j=i+1;j<nodes.length;j++){
-        const dx=nodes[i].xf-nodes[j].xf,dy=nodes[i].yf-nodes[j].yf;
-        if(Math.sqrt(dx*dx+dy*dy)<.14)edges.push({a:i,b:j});
-      }
-    }
-  }
-
-  const cv=document.getElementById('cSCENE');
-  const ctx=cv.getContext('2d');
-  let lt=0;
-
-  function drawHex(x,y,r,rot){
-    ctx.beginPath();
-    for(let i=0;i<6;i++){const a=(i/6)*Math.PI*2+rot;i===0?ctx.moveTo(x+Math.cos(a)*r,y+Math.sin(a)*r):ctx.lineTo(x+Math.cos(a)*r,y+Math.sin(a)*r);}
-    ctx.closePath();
-  }
-
-  function drawLattice(t){
-    if(!nodesBuilt){buildNodes(W,H);nodesBuilt=true;}
-    const w=W,h=H;
-
-    // Propagate / decay energy
-    nodes.forEach(n=>{n.energy=Math.max(0,n.energy-.004);n.phase+=n.sp;});
-    if(Math.random()<.04){
-      const act=nodes.filter(n=>n.energy>.5);
-      if(act.length){const src=act[Math.floor(Math.random()*act.length)],si=nodes.indexOf(src);
-        edges.filter(e=>e.a===si||e.b===si).forEach(e=>{if(Math.random()<.45){const ni=e.a===si?e.b:e.a;nodes[ni].energy=Math.min(1,nodes[ni].energy+.3+Math.random()*.4);}});}
-    }
-    if(Math.random()<.022){const ni=Math.floor(Math.random()*nodes.length);nodes[ni].energy=.7+Math.random()*.3;}
-    // Hover activation
-    if(window._p4mx&&window._p4my){
-      nodes.forEach(n=>{if(Math.sqrt((n.x-window._p4mx)**2+(n.y-window._p4my)**2)<58)n.energy=Math.min(1,n.energy+.06);});
-    }
-
-    // Draw edges
-    edges.forEach(e=>{
-      const a=nodes[e.a],b=nodes[e.b];const en=(a.energy+b.energy)*.5;
-      if(en<.035){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle='rgba(0,212,255,.032)';ctx.lineWidth=.4;ctx.stroke();return;}
-      const steps=6,pts=[{x:a.x,y:a.y}];
-      for(let s=1;s<steps;s++){const p=s/steps,jx=(Math.random()-.5)*18*en*(1-Math.abs(p-.5)*2),jy=(Math.random()-.5)*13*en*(1-Math.abs(p-.5)*2);pts.push({x:a.x+(b.x-a.x)*p+jx,y:a.y+(b.y-a.y)*p+jy});}
-      pts.push({x:b.x,y:b.y});
-      ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));
-      ctx.strokeStyle=`rgba(0,212,255,${en*.065})`;ctx.lineWidth=4.5;ctx.stroke();
-      ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));
-      ctx.strokeStyle=`rgba(100,222,255,${en*.38})`;ctx.lineWidth=.8;ctx.stroke();
-    });
-
-    // Draw clay orb nodes
-    nodes.forEach(n=>{
-      const en=n.energy*.82+Math.sin(n.phase)*.12+.08;
-      const rot=t*.12+n.phase;
-      // Glow beneath
-      if(en>.15){const og=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r*3.5);og.addColorStop(0,`rgba(0,212,255,${en*.16})`);og.addColorStop(1,'rgba(0,212,255,0)');ctx.fillStyle=og;ctx.fillRect(n.x-n.r*3.5,n.y-n.r*3.5,n.r*7,n.r*7);}
-      // Drop shadow
-      const ds=ctx.createRadialGradient(n.x,n.y+n.r*.4,0,n.x,n.y+n.r*.5,n.r*1.3);
-      ds.addColorStop(0,`rgba(0,0,0,${.38*en})`);ds.addColorStop(1,'rgba(0,0,0,0)');
-      ctx.fillStyle=ds;ctx.beginPath();ctx.arc(n.x,n.y+n.r*.25,n.r*1.25,0,Math.PI*2);ctx.fill();
-      // Clay base (hexagonal shape with clay fill)
-      drawHex(n.x,n.y,n.r,rot);
-      const bg=ctx.createRadialGradient(n.x-n.r*.28,n.y-n.r*.3,0,n.x,n.y,n.r);
-      // Cyan-tinted clay when energised, neutral clay otherwise
-      const lo=en>.5?`rgba(190,240,255,${.7+en*.25})`:en>.2?`rgba(215,240,255,${.65+en*.2})`:en>'#'?'':'rgba(240,238,250,.72)';
-      const hiC=en>.5?'rgba(225,250,255,.88)':en>.2?'rgba(230,242,255,.82)':'rgba(248,246,255,.78)';
-      const loC=en>.5?'rgba(100,195,240,.65)':en>.2?'rgba(150,215,245,.52)':'rgba(190,185,230,.6)';
-      bg.addColorStop(0,hiC);bg.addColorStop(.42,loC);bg.addColorStop(.85,`rgba(${en>.3?'0,140,220':'140,130,200'},.42)`);bg.addColorStop(1,`rgba(${en>.3?'0,100,180':'100,90,170'},.55)`);
-      ctx.fillStyle=bg;ctx.fill();
-      // Top highlight
-      drawHex(n.x,n.y,n.r,rot);
-      const hi=ctx.createRadialGradient(n.x-n.r*.3,n.y-n.r*.4,0,n.x-n.r*.08,n.y-n.r*.18,n.r*.6);
-      hi.addColorStop(0,'rgba(255,255,255,.78)');hi.addColorStop(.45,'rgba(255,255,255,.2)');hi.addColorStop(1,'rgba(255,255,255,0)');
-      ctx.fillStyle=hi;ctx.fill();
-      // Bottom rim shadow
-      drawHex(n.x,n.y,n.r,rot);
-      const ri=ctx.createRadialGradient(n.x+n.r*.22,n.y+n.r*.3,0,n.x+n.r*.06,n.y+n.r*.12,n.r*.88);
-      ri.addColorStop(0,`rgba(0,0,0,${.2*en})`);ri.addColorStop(1,'rgba(0,0,0,0)');
-      ctx.fillStyle=ri;ctx.fill();
-      // Hex stroke
-      drawHex(n.x,n.y,n.r,rot);ctx.strokeStyle=`rgba(0,212,255,${.12+en*.48})`;ctx.lineWidth=.9;ctx.stroke();
-      // Center dot
-      ctx.beginPath();ctx.arc(n.x,n.y,n.r*.3,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,255,${en*.68})`;ctx.fill();
-    });
-
-    lt=t;
-  }
-
-  // Intercept scene loop draw call
-  const origScene=window._sceneDrawFn;
-  // We need to integrate with the existing scene loop
-  // Add lattice draw to requestAnimationFrame by patching cSCENE loop
-  const origLoop=requestAnimationFrame;
-  // Simplest: add a MutationObserver on panel class to draw lattice
-  // Actually, let's just check in a separate rAF whether cur===4
-  ;(function latticeLoop(){
-    if(cur===4)drawLattice(scT);
-    requestAnimationFrame(latticeLoop);
-  })();
+  floorGeo.computeVertexNormals();
 })();
+const floor = new THREE.Mesh(floorGeo, iceFloorMat);
+floor.rotation.x = -Math.PI / 2;
+floor.position.y = -3.6;
+floor.receiveShadow = true;
+scene.add(floor);
 
-// ═══════════════════════════════════════════════════════
+// ── ICE CEILING (translucent — aurora shines THROUGH it) ───────
+const ceilGeo = new THREE.PlaneGeometry(60, 40, 22, 16);
+(function distortCeil() {
+  const pos = ceilGeo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    pos.setZ(i, (Math.random() - 0.5) * 0.55);
+  }
+  ceilGeo.computeVertexNormals();
+})();
+const ceiling = new THREE.Mesh(ceilGeo, iceMat);
+ceiling.rotation.x = Math.PI / 2;
+ceiling.position.y = 7.5;
+scene.add(ceiling);
+
+// ── BACK ICE WALL (main glacier face) ──────────────────────────
+const backWall = new THREE.Mesh(new THREE.BoxGeometry(50, 20, 2.5), iceWallMat);
+backWall.position.set(0, 1, -13);
+scene.add(backWall);
+// Dark ice patches (depth variation on back wall)
+for (let i = 0; i < 6; i++) {
+  const p = new THREE.Mesh(
+    new THREE.BoxGeometry(4 + Math.random() * 7, 4 + Math.random() * 5, 0.6),
+    darkIceMat
+  );
+  p.position.set((Math.random() - 0.5) * 32, (Math.random() - 0.5) * 9 + 1, -12.6);
+  scene.add(p);
+}
+
+// ── SIDE WALLS ─────────────────────────────────────────────────
+[-17, 17].forEach(xPos => {
+  const wall = new THREE.Mesh(new THREE.BoxGeometry(2.8, 18, 32), iceWallMat);
+  wall.position.set(xPos, 1, -4);
+  scene.add(wall);
+  // Subsurface glow stripes on side walls
+  for (let g = 0; g < 4; g++) {
+    const glowMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(0.12, 6 + Math.random() * 4, 0.12),
+      new THREE.MeshStandardMaterial({
+        color: 0x00AABB, emissive: 0x00AABB, emissiveIntensity: 2.5,
+        transparent: true, opacity: 0.55,
+      })
+    );
+    glowMesh.position.set(
+      xPos + (xPos > 0 ? -1.2 : 1.2),
+      (Math.random() - 0.5) * 6,
+      (Math.random() - 0.5) * 18 - 2
+    );
+    scene.add(glowMesh);
+  }
+});
+
+// ── ICE STALACTITES (ceiling formations) ───────────────────────
+for (let i = 0; i < 18; i++) {
+  const h = 0.8 + Math.random() * 3;
+  const r = 0.055 + Math.random() * 0.13;
+  const stal = new THREE.Mesh(new THREE.ConeGeometry(r, h, 5 + Math.floor(Math.random() * 3)), stalMat);
+  stal.position.set(
+    (Math.random() - 0.5) * 24,
+    7.5 - h / 2,
+    (Math.random() - 0.5) * 16 - 3
+  );
+  scene.add(stal);
+}
+
+// ── FLOOR ICE STALAGMITES ──────────────────────────────────────
+for (let i = 0; i < 10; i++) {
+  const h = 0.3 + Math.random() * 1.4;
+  const r = 0.06 + Math.random() * 0.16;
+  const stag = new THREE.Mesh(new THREE.ConeGeometry(r, h, 5), stalMat);
+  stag.rotation.x = Math.PI;
+  stag.position.set(
+    (Math.random() < 0.5 ? -1 : 1) * (5.5 + Math.random() * 9),
+    -3.6 + h / 2,
+    (Math.random() - 0.5) * 14 - 2
+  );
+  scene.add(stag);
+}
+
+// ── TACHYON CORE GROUP ─────────────────────────────────────────
+const coreGroup = new THREE.Group();
+
+// Ice block — physical container
+const iceBlockMat = new THREE.MeshPhysicalMaterial({
+  color: 0xD8F2FF, roughness: 0.06, metalness: 0,
+  transparent: true, opacity: 0.70, side: THREE.DoubleSide,
+  envMapIntensity: 1.4,
+});
+const iceBlock = new THREE.Mesh(new THREE.BoxGeometry(2.0, 2.5, 1.5), iceBlockMat);
+iceBlock.castShadow = false;
+coreGroup.add(iceBlock);
+
+// Inner energy sphere
+const sphereMat = new THREE.MeshStandardMaterial({
+  color: 0x1E88FF, emissive: 0x0055CC, emissiveIntensity: 2.8,
+  roughness: 0.08, metalness: 0,
+});
+const energySphere = new THREE.Mesh(new THREE.SphereGeometry(0.48, 32, 32), sphereMat);
+coreGroup.add(energySphere);
+
+// Halo around sphere
+const haloMat = new THREE.MeshBasicMaterial({
+  color: 0x0080FF, transparent: true, opacity: 0.12, side: THREE.BackSide,
+});
+coreGroup.add(new THREE.Mesh(new THREE.SphereGeometry(0.65, 16, 16), haloMat));
+
+// Momentum curves (3 closed helical tubes — dispersion relation visualization)
+const TUBE_COLORS = [0x00D4FF, 0x9B59FF, 0x00EE88];
+const tubeGroups = [];
+TUBE_COLORS.forEach((col, ci) => {
+  const pts = [];
+  const phaseOffset = (ci / 3) * Math.PI * 2;
+  for (let i = 0; i <= 48; i++) {
+    const t = (i / 48) * Math.PI * 2;
+    pts.push(new THREE.Vector3(
+      Math.sin(t * 1.5 + phaseOffset) * 0.42,
+      Math.cos(t * 2.2) * 0.55,
+      Math.cos(t * 1.5 + phaseOffset) * 0.42
+    ));
+  }
+  const curve = new THREE.CatmullRomCurve3(pts, true);
+  const tubeGeo = new THREE.TubeGeometry(curve, 64, 0.017, 6, true);
+  const tubeMat = new THREE.MeshStandardMaterial({
+    color: col, emissive: col, emissiveIntensity: 3.8,
+    transparent: true, opacity: 0.82,
+  });
+  const tube = new THREE.Mesh(tubeGeo, tubeMat);
+  coreGroup.add(tube);
+  tubeGroups.push({ tube, speed: 0.004 + ci * 0.002, dir: ci % 2 === 0 ? 1 : -1 });
+});
+
+coreGroup.position.set(0, 0.2, 0);
+scene.add(coreGroup);
+
+// ── AURORA PLANES (above ice ceiling — shine THROUGH the ice) ──
+const auroraPlanes = [];
+const AURORA_COLS = [0x00FF88, 0x00CCFF, 0xAA44FF, 0x22FFCC];
+AURORA_COLS.forEach((col, i) => {
+  const geo = new THREE.PlaneGeometry(50, 4 + i * 0.8, 35, 6);
+  const mat = new THREE.MeshBasicMaterial({
+    color: col, transparent: true, opacity: 0.055 + i * 0.018,
+    side: THREE.DoubleSide, depthWrite: false,
+  });
+  const plane = new THREE.Mesh(geo, mat);
+  plane.position.set((i - 1.5) * 2, 9.5 + i * 1.0, -10 - i * 2);
+  plane.rotation.x = -0.12 - i * 0.04;
+  scene.add(plane);
+  auroraPlanes.push({ mesh: plane, col, phase: i * 1.3, spd: 0.28 + i * 0.18 });
+});
+
+// ── SNOW PARTICLES ─────────────────────────────────────────────
+const SNOW_N = 1600;
+const sPos = new Float32Array(SNOW_N * 3);
+const sVel = new Float32Array(SNOW_N * 3);
+for (let i = 0; i < SNOW_N; i++) {
+  sPos[i*3]   = (Math.random() - 0.5) * 28;
+  sPos[i*3+1] = (Math.random() - 0.5) * 14;
+  sPos[i*3+2] = (Math.random() - 0.5) * 18;
+  sVel[i*3]   = (Math.random() - 0.5) * 0.004;
+  sVel[i*3+1] = -(0.007 + Math.random() * 0.011);
+  sVel[i*3+2] = (Math.random() - 0.5) * 0.003;
+}
+const snowGeo = new THREE.BufferGeometry();
+snowGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3));
+const snowMat = new THREE.PointsMaterial({
+  color: 0xCCE8F8, size: 0.065, transparent: true, opacity: 0.70, sizeAttenuation: true,
+});
+const snowPts = new THREE.Points(snowGeo, snowMat);
+scene.add(snowPts);
+
+// ── THREE.JS ANIMATION ─────────────────────────────────────────
+let thT = 0;
+const camSmooth = { x: 0, y: 2.2, z: 10.5, lx: 0, ly: 0.4, lz: 0 };
+let camMX = 0, camMY = 0; // mouse parallax contribution
+
+function animateThree() {
+  requestAnimationFrame(animateThree);
+  thT += 0.01;
+
+  // Smooth camera to target
+  const ct = CAM[curSec];
+  camSmooth.x  += (ct.x  + camMX - camSmooth.x)  * 0.038;
+  camSmooth.y  += (ct.y  + camMY - camSmooth.y)  * 0.038;
+  camSmooth.z  += (ct.z  - camSmooth.z)  * 0.038;
+  camSmooth.lx += (ct.lx - camSmooth.lx) * 0.04;
+  camSmooth.ly += (ct.ly - camSmooth.ly) * 0.04;
+  camSmooth.lz += (ct.lz - camSmooth.lz) * 0.04;
+  camera.position.set(camSmooth.x, camSmooth.y, camSmooth.z);
+  camera.lookAt(camSmooth.lx, camSmooth.ly, camSmooth.lz);
+
+  // Core float + rotate
+  coreGroup.position.y = 0.2 + Math.sin(thT * 0.78) * 0.16;
+  coreGroup.rotation.y += 0.003;
+  // Tube individual rotations
+  tubeGroups.forEach(tg => { tg.tube.rotation.y += tg.speed * tg.dir; });
+  // Core glow pulse
+  coreGlowL.intensity = 4.5 + Math.sin(thT * 2.2) * 0.9;
+  // Energy sphere emissive pulse
+  sphereMat.emissiveIntensity = 2.5 + Math.sin(thT * 3) * 0.55;
+
+  // Aurora lights oscillate
+  auroraLights.forEach(({ light, base }, i) => {
+    light.intensity = base.int * (0.75 + Math.sin(thT * 0.55 + i * 1.6) * 0.28);
+    light.position.x = base.pos[0] + Math.sin(thT * 0.2 + i * 0.9) * 2.5;
+    light.position.z = base.pos[2] + Math.cos(thT * 0.14 + i * 0.7) * 1.5;
+  });
+
+  // Aurora planes wave
+  auroraPlanes.forEach(ap => {
+    const pos = ap.mesh.geometry.attributes.position;
+    for (let vi = 0; vi < pos.count; vi++) {
+      const x = pos.getX(vi);
+      pos.setZ(vi, Math.sin(x * 0.12 + thT * ap.spd + ap.phase) * 0.42);
+    }
+    pos.needsUpdate = true;
+    ap.mesh.material.opacity = 0.038 + Math.sin(thT * 0.35 + ap.phase) * 0.024;
+  });
+
+  // Snow fall + loop
+  const sp = snowGeo.attributes.position;
+  for (let i = 0; i < SNOW_N; i++) {
+    let x = sp.getX(i) + sVel[i*3];
+    let y = sp.getY(i) + sVel[i*3+1];
+    let z = sp.getZ(i) + sVel[i*3+2];
+    if (y < -7.2) { y = 7.2; x = (Math.random() - 0.5) * 28; z = (Math.random() - 0.5) * 18; }
+    sp.setXYZ(i, x, y, z);
+  }
+  sp.needsUpdate = true;
+
+  renderer.render(scene, camera);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PANEL CANVASES (2D data visualisations inside glass panels)
+// ═══════════════════════════════════════════════════════════════
+// P1: Minkowski spacetime diagram
+let p1hov = false, p1hx = 0, p1hy = 0;
+const nPts1 = Array.from({length:13}, () => ({prog:Math.random(), sp:0.0038+Math.random()*.003}));
+const tPts1 = Array.from({length:13}, () => ({prog:Math.random(), sp:0.006+Math.random()*.004, trail:[]}));
+
+function initP1() {
+  const cv = document.getElementById('cP1');
+  if (!cv) return;
+  const par = cv.parentElement;
+  const sz = () => { cv.width = par.offsetWidth||470; cv.height = par.offsetHeight||415; };
+  sz(); window.addEventListener('resize', sz);
+  par.addEventListener('mousemove', e => { const r = par.getBoundingClientRect(); p1hx = e.clientX-r.left; p1hy = e.clientY-r.top; p1hov = true; });
+  par.addEventListener('mouseleave', () => p1hov = false);
+}
+
+function drawP1(t) {
+  const cv = document.getElementById('cP1');
+  if (!cv || !cv.width) return;
+  const ctx = cv.getContext('2d');
+  const w = cv.width, h = cv.height;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle = 'rgba(2,10,24,0.96)'; ctx.fillRect(0,0,w,h);
+  const ox = w*.14, oy = h*.88, sc = Math.min(w,h)*.72;
+  // Grid
+  for (let g=0; g<=10; g++) {
+    const gx = ox+g*sc/8; if(gx>0&&gx<w){ ctx.beginPath(); ctx.moveTo(gx,18); ctx.lineTo(gx,oy); ctx.strokeStyle='rgba(0,200,240,0.03)'; ctx.lineWidth=.5; ctx.stroke(); }
+    const gy = oy-g*sc/8; if(gy>18&&gy<oy){ ctx.beginPath(); ctx.moveTo(ox,gy); ctx.lineTo(w-8,gy); ctx.strokeStyle='rgba(0,200,240,0.03)'; ctx.lineWidth=.5; ctx.stroke(); }
+  }
+  // Axes
+  ctx.beginPath(); ctx.moveTo(ox,oy-4); ctx.lineTo(ox,14); ctx.strokeStyle='rgba(215,238,255,0.15)'; ctx.lineWidth=.7; ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(ox-4,oy); ctx.lineTo(w-10,oy); ctx.strokeStyle='rgba(215,238,255,0.15)'; ctx.lineWidth=.7; ctx.stroke();
+  ctx.fillStyle='rgba(215,238,255,0.26)'; ctx.font='8px "JetBrains Mono",monospace'; ctx.textAlign='center';
+  ctx.fillText('x (space)', ox+sc*.55, oy+14);
+  ctx.save(); ctx.translate(ox-13,oy-sc*.3); ctx.rotate(-Math.PI/2); ctx.fillText('ct (time)',0,0); ctx.restore();
+  // Light cone
+  ctx.beginPath(); ctx.moveTo(ox,oy); ctx.lineTo(ox+sc*.88, oy-sc*.88);
+  const lcg = ctx.createLinearGradient(ox,oy,ox+sc*.88,oy-sc*.88);
+  lcg.addColorStop(0,'rgba(255,210,70,.58)'); lcg.addColorStop(1,'rgba(255,210,70,.06)');
+  ctx.strokeStyle=lcg; ctx.lineWidth=1.1; ctx.setLineDash([4,5]); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle='rgba(255,210,70,0.45)'; ctx.font='8px "JetBrains Mono",monospace'; ctx.textAlign='left';
+  ctx.fillText('v = c', ox+sc*.35, oy-sc*.32);
+  // Normal matter worldline
+  ctx.beginPath();
+  for (let xi=0; xi<=1; xi+=.004) {
+    const gx=ox+xi*sc*.82, ty=Math.sqrt((xi*.7)**2+.08)-.283, gy=oy-ty*sc*1.18;
+    if(gy<15||gy>oy) continue; xi===0?ctx.moveTo(gx,gy):ctx.lineTo(gx,gy);
+  }
+  ctx.strokeStyle='rgba(185,218,240,0.42)'; ctx.lineWidth=1.3; ctx.stroke();
+  ctx.fillStyle='rgba(185,218,240,0.34)'; ctx.fillText('v < c', ox+sc*.04, oy-sc*.22);
+  // Tachyon worldline
+  ctx.beginPath();
+  for (let xi=0; xi<=1; xi+=.004) {
+    const gx=ox+xi*sc*.9, gy=oy-xi*.33*sc*.72;
+    if(gy<15||gy>oy) continue; xi===0?ctx.moveTo(gx,gy):ctx.lineTo(gx,gy);
+  }
+  const tcg = ctx.createLinearGradient(ox,oy,ox+sc*.9,oy-sc*.24);
+  tcg.addColorStop(0,'rgba(0,210,255,.82)'); tcg.addColorStop(1,'rgba(0,210,255,.1)');
+  ctx.strokeStyle=tcg; ctx.lineWidth=1.6; ctx.stroke();
+  ctx.fillStyle='rgba(0,210,255,0.52)'; ctx.fillText('v > c (tachyon)', ox+sc*.32, oy-sc*.075);
+  // Hover distortion
+  if (p1hov) {
+    const dg = ctx.createRadialGradient(p1hx,p1hy,0,p1hx,p1hy,90);
+    dg.addColorStop(0,'rgba(155,89,255,0.08)'); dg.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=dg; ctx.fillRect(0,0,w,h);
+    for (let di=0; di<6; di++) {
+      ctx.beginPath(); ctx.moveTo(p1hx,p1hy);
+      ctx.lineTo(p1hx+Math.cos(di/6*Math.PI*2)*36, p1hy+Math.sin(di/6*Math.PI*2)*36);
+      ctx.strokeStyle=`rgba(155,89,255,${0.1+Math.sin(t*3+di)*.05})`; ctx.lineWidth=.5; ctx.stroke();
+    }
+  }
+  // Animated particles
+  nPts1.forEach(p => {
+    p.prog=(p.prog+p.sp)%1; if(p.prog>.98)p.prog=0;
+    const xi=p.prog*.97, gx=ox+xi*sc*.82;
+    const ty=Math.sqrt((xi*.7)**2+.08)-.283, gy=oy-ty*sc*1.18;
+    if(gy<15||gy>oy) return;
+    ctx.beginPath(); ctx.arc(gx,gy,2.2,0,Math.PI*2); ctx.fillStyle='rgba(185,218,240,0.6)'; ctx.fill();
+  });
+  tPts1.forEach(p => {
+    p.prog=(p.prog+p.sp)%1;
+    const gx=ox+p.prog*sc*.9, gy=oy-p.prog*.33*sc*.72;
+    if(!p.trail) p.trail=[];
+    p.trail.push({x:gx,y:gy}); if(p.trail.length>22) p.trail.shift();
+    if(p.trail.length>1) for(let ti=1;ti<p.trail.length;ti++) {
+      const pr=ti/p.trail.length;
+      ctx.beginPath(); ctx.moveTo(p.trail[ti-1].x,p.trail[ti-1].y); ctx.lineTo(p.trail[ti].x,p.trail[ti].y);
+      ctx.strokeStyle=`rgba(0,210,255,${pr*.55})`; ctx.lineWidth=1.4*pr; ctx.stroke();
+    }
+    ctx.beginPath(); ctx.arc(gx,gy,2.9,0,Math.PI*2); ctx.fillStyle='rgba(0,210,255,0.88)'; ctx.fill();
+  });
+}
+
+// P2: Relativistic momentum curve
+const nm2 = Array.from({length:12},()=>({prog:Math.random(),sp:0.003+Math.random()*.003}));
+const tp2 = Array.from({length:10},()=>({prog:Math.random(),sp:0.004+Math.random()*.0044,trail:[]}));
+
+function initP2() {
+  const cv = document.getElementById('cP2');
+  if (!cv) return;
+  const par = cv.parentElement;
+  const sz = () => { cv.width = par.offsetWidth||680; cv.height = par.offsetHeight||320; };
+  sz(); window.addEventListener('resize', sz);
+}
+
+function drawP2(t) {
+  const cv = document.getElementById('cP2');
+  if (!cv || !cv.width) return;
+  const ctx = cv.getContext('2d');
+  const w = cv.width, h = cv.height;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle='rgba(2,10,24,0.96)'; ctx.fillRect(0,0,w,h);
+  const pl={l:62,r:34,t:32,b:46};
+  const aw=w-pl.l-pl.r, ah=h-pl.t-pl.b;
+  const ox=pl.l, oy=pl.t+ah;
+  for(let g=0;g<=8;g++){
+    const gx=ox+g*aw/8;
+    ctx.beginPath();ctx.moveTo(gx,pl.t);ctx.lineTo(gx,oy);ctx.strokeStyle='rgba(0,200,240,0.032)';ctx.lineWidth=.5;ctx.stroke();
+    ctx.fillStyle='rgba(215,238,255,0.2)';ctx.font='7px "JetBrains Mono",monospace';ctx.textAlign='center';
+    ctx.fillText((g/8).toFixed(1)+'c',gx,oy+13);
+    const gy=oy-g*ah/5;if(g<=5){ctx.beginPath();ctx.moveTo(ox,gy);ctx.lineTo(ox+aw,gy);ctx.strokeStyle='rgba(0,200,240,0.032)';ctx.lineWidth=.5;ctx.stroke();}
+  }
+  ctx.beginPath();ctx.moveTo(ox,pl.t);ctx.lineTo(ox,oy);ctx.lineTo(ox+aw,oy);ctx.strokeStyle='rgba(215,238,255,0.16)';ctx.lineWidth=.8;ctx.stroke();
+  ctx.fillStyle='rgba(215,238,255,0.24)';ctx.font='8px "JetBrains Mono",monospace';ctx.textAlign='center';
+  ctx.fillText('velocity (v/c)',ox+aw*.5,oy+28);
+  ctx.save();ctx.translate(ox-38,oy-ah*.5);ctx.rotate(-Math.PI/2);ctx.fillText('relativistic momentum p',0,0);ctx.restore();
+  // Barrier
+  const bx=ox+aw;
+  ctx.beginPath();ctx.moveTo(bx,pl.t);ctx.lineTo(bx,oy);
+  ctx.strokeStyle=`rgba(255,210,70,${0.3+Math.sin(t*2)*.08})`;ctx.lineWidth=.9;ctx.setLineDash([4,5]);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='rgba(255,210,70,0.42)';ctx.font='9px "JetBrains Mono",monospace';ctx.textAlign='center';ctx.fillText('c',bx,pl.t-6);
+  ctx.save();ctx.beginPath();ctx.rect(bx,pl.t,aw*.2,ah);ctx.fillStyle='rgba(0,210,255,0.012)';ctx.fill();ctx.restore();
+  ctx.fillStyle='rgba(0,210,255,0.22)';ctx.font='7.5px "JetBrains Mono",monospace';ctx.textAlign='left';ctx.fillText('superluminal',bx+4,pl.t+17);
+  // Normal matter curve
+  ctx.beginPath();
+  for(let vi=0;vi<=.999;vi+=.003){const gx=ox+vi*aw,pv=vi/Math.sqrt(1-vi*vi+.0001),gy=oy-Math.min(pv,5.5)*ah/5.7;vi===0?ctx.moveTo(gx,gy):ctx.lineTo(gx,gy);}
+  const nmg=ctx.createLinearGradient(ox,oy,ox+aw*.9,pl.t+10);nmg.addColorStop(0,'rgba(185,218,240,0.48)');nmg.addColorStop(1,'rgba(185,218,240,0.1)');
+  ctx.strokeStyle=nmg;ctx.lineWidth=1.5;ctx.stroke();
+  ctx.fillStyle='rgba(185,218,240,0.32)';ctx.fillText('v < c',ox+6,pl.t+16);
+  // Tachyon curve
+  ctx.beginPath();let fT=true;
+  for(let vi=1.02;vi<=4.5;vi+=.02){const gx=ox+aw+(vi-1)/3.5*aw*.2;if(gx>w+8)break;const pv=vi/Math.sqrt(vi*vi-1),gy=oy-Math.min(pv,5.5)*ah/5.7;if(fT){ctx.moveTo(gx,pl.t+2);fT=false;}ctx.lineTo(gx,gy);}
+  ctx.strokeStyle='rgba(0,210,255,0.68)';ctx.lineWidth=1.6;ctx.stroke();
+  // Particles
+  nm2.forEach(p=>{p.prog=(p.prog+p.sp)%1;if(p.prog>.99)p.prog=0;const vi=p.prog*.97,gx=ox+vi*aw,pv=vi/Math.sqrt(1-vi*vi+.0001),gy=oy-Math.min(pv,5.5)*ah/5.7;ctx.beginPath();ctx.arc(gx,gy,2.2,0,Math.PI*2);ctx.fillStyle='rgba(185,218,240,0.58)';ctx.fill();});
+  tp2.forEach(p=>{p.prog=(p.prog+p.sp)%1;const vi=1.05+p.prog*2.5,gx=ox+aw+(vi-1)/3.5*aw*.2;if(gx>w+8)return;const pv=vi/Math.sqrt(vi*vi-1),gy=oy-Math.min(pv,5.5)*ah/5.7;if(!p.trail)p.trail=[];p.trail.push({x:gx,y:gy});if(p.trail.length>18)p.trail.shift();if(p.trail.length>1)for(let ti=1;ti<p.trail.length;ti++){const pr=ti/p.trail.length;ctx.beginPath();ctx.moveTo(p.trail[ti-1].x,p.trail[ti-1].y);ctx.lineTo(p.trail[ti].x,p.trail[ti].y);ctx.strokeStyle=`rgba(0,210,255,${pr*.5})`;ctx.lineWidth=pr*1.7;ctx.stroke();}ctx.beginPath();ctx.arc(gx,gy,2.7,0,Math.PI*2);ctx.fillStyle='rgba(0,210,255,0.88)';ctx.fill();});
+}
+
+// P4: QPoS crystal node lattice
+let lattNodes=[], lattEdges=[], p4hx=-1, p4hy=-1;
+
+function initP4() {
+  const cv = document.getElementById('cP4');
+  if (!cv) return;
+  const par = cv.parentElement;
+  function sz() {
+    cv.width=par.offsetWidth||W*.86; cv.height=par.offsetHeight||H*.46;
+    buildLatt(cv.width, cv.height);
+  }
+  sz(); window.addEventListener('resize',sz);
+  par.style.pointerEvents='all';
+  par.addEventListener('mousemove',e=>{const r=par.getBoundingClientRect();p4hx=e.clientX-r.left;p4hy=e.clientY-r.top;});
+  par.addEventListener('mouseleave',()=>{p4hx=-1;p4hy=-1;});
+}
+
+function buildLatt(w,h) {
+  lattNodes=[]; lattEdges=[];
+  const cols=12,rows=12,fw=w*.86,fh=h*.82,ox=w*.07,oy=h*.09;
+  for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+    const xf=(c+.5)/cols+(r%2===0?0:.5/cols),yf=(r+.5)/rows;
+    lattNodes.push({x:ox+xf*fw,y:oy+yf*fh,r:4+Math.random()*3.2,energy:Math.random()*.28,phase:Math.random()*Math.PI*2,sp:.009+Math.random()*.018,xf,yf});
+  }
+  for(let i=0;i<lattNodes.length;i++) for(let j=i+1;j<lattNodes.length;j++){
+    const dx=lattNodes[i].xf-lattNodes[j].xf,dy=lattNodes[i].yf-lattNodes[j].yf;
+    if(Math.sqrt(dx*dx+dy*dy)<.13) lattEdges.push({a:i,b:j});
+  }
+}
+
+function drawP4(t) {
+  const cv = document.getElementById('cP4');
+  if (!cv || !cv.width) return;
+  const ctx = cv.getContext('2d');
+  const w=cv.width,h=cv.height;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle='rgba(2,10,24,0.97)';ctx.fillRect(0,0,w,h);
+
+  lattNodes.forEach(n=>{n.energy=Math.max(0,n.energy-.0044);n.phase+=n.sp;});
+  if(Math.random()<.042){const act=lattNodes.filter(n=>n.energy>.5);if(act.length){const src=act[Math.floor(Math.random()*act.length)],si=lattNodes.indexOf(src);lattEdges.filter(e=>e.a===si||e.b===si).forEach(e=>{if(Math.random()<.44){const ni=e.a===si?e.b:e.a;lattNodes[ni].energy=Math.min(1,lattNodes[ni].energy+.32+Math.random()*.42);}});}}
+  if(Math.random()<.022){const ni=Math.floor(Math.random()*lattNodes.length);lattNodes[ni].energy=.7+Math.random()*.3;}
+  if(p4hx>0) lattNodes.forEach(n=>{if(Math.sqrt((n.x-p4hx)**2+(n.y-p4hy)**2)<52)n.energy=Math.min(1,n.energy+.06);});
+
+  lattEdges.forEach(e=>{
+    const a=lattNodes[e.a],b=lattNodes[e.b],en=(a.energy+b.energy)*.5;
+    if(en<.04){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle='rgba(0,200,240,0.03)';ctx.lineWidth=.4;ctx.stroke();return;}
+    const pts=[{x:a.x,y:a.y}];
+    for(let s=1;s<6;s++){const p=s/6;pts.push({x:a.x+(b.x-a.x)*p+(Math.random()-.5)*17*en,y:a.y+(b.y-a.y)*p+(Math.random()-.5)*12*en});}
+    pts.push({x:b.x,y:b.y});
+    ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));
+    ctx.strokeStyle=`rgba(0,210,255,${en*.065})`;ctx.lineWidth=4.5;ctx.stroke();
+    ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));
+    ctx.strokeStyle=`rgba(100,222,255,${en*.4})`;ctx.lineWidth=.8;ctx.stroke();
+  });
+
+  lattNodes.forEach(n=>{
+    const en=n.energy*.82+Math.sin(n.phase)*.12+.08;
+    if(en>.14){const og=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r*3.4);og.addColorStop(0,`rgba(0,210,255,${en*.16})`);og.addColorStop(1,'rgba(0,210,255,0)');ctx.fillStyle=og;ctx.fillRect(n.x-n.r*3.4,n.y-n.r*3.4,n.r*6.8,n.r*6.8);}
+    const ds=ctx.createRadialGradient(n.x,n.y+n.r*.4,0,n.x,n.y+n.r*.5,n.r*1.3);ds.addColorStop(0,`rgba(0,0,0,${.36*en})`);ds.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=ds;ctx.beginPath();ctx.arc(n.x,n.y+n.r*.22,n.r*1.24,0,Math.PI*2);ctx.fill();
+    // Hex
+    ctx.beginPath();for(let i=0;i<6;i++){const a=(i/6)*Math.PI*2+t*.12+n.phase;i===0?ctx.moveTo(n.x+Math.cos(a)*n.r,n.y+Math.sin(a)*n.r):ctx.lineTo(n.x+Math.cos(a)*n.r,n.y+Math.sin(a)*n.r);}ctx.closePath();
+    const hg=ctx.createRadialGradient(n.x-n.r*.28,n.y-n.r*.3,0,n.x,n.y,n.r);
+    hg.addColorStop(0,en>.5?'rgba(200,245,255,0.9)':'rgba(225,240,255,0.82)');hg.addColorStop(.42,en>.5?'rgba(0,175,238,0.62)':'rgba(160,185,235,0.58)');hg.addColorStop(1,`rgba(${en>.3?'0,100,180':'100,90,180'},0.52)`);
+    ctx.fillStyle=hg;ctx.fill();
+    const hi=ctx.createRadialGradient(n.x-n.r*.3,n.y-n.r*.38,0,n.x-n.r*.08,n.y-n.r*.16,n.r*.58);hi.addColorStop(0,'rgba(255,255,255,0.76)');hi.addColorStop(.45,'rgba(255,255,255,0.2)');hi.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=hi;ctx.fill();
+    ctx.strokeStyle=`rgba(0,210,255,${.14+en*.52})`;ctx.lineWidth=.9;ctx.stroke();
+    ctx.beginPath();ctx.arc(n.x,n.y,n.r*.28,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,255,${en*.65})`;ctx.fill();
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PANEL CANVAS RENDER LOOP
+// ═══════════════════════════════════════════════════════════════
+let pT = 0;
+function panelLoop() {
+  if (curSec === 1) drawP1(pT);
+  if (curSec === 2) drawP2(pT);
+  if (curSec === 4) drawP4(pT);
+  pT += 0.014;
+  requestAnimationFrame(panelLoop);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════════════════
+function goTo(i) {
+  if (i === curSec || navLock) return;
+  navLock = true; curSec = i;
+  document.querySelectorAll('.sec').forEach((s,j) => s.classList.toggle('on', j===i));
+  document.querySelectorAll('.nd').forEach((d,j) => d.classList.toggle('on', j===i));
+  document.querySelectorAll('.wl').forEach((d,j) => d.classList.toggle('on', j===i));
+  document.getElementById('ni').textContent = String(i+1).padStart(2,'0');
+  setTimeout(() => navLock=false, 950);
+}
+function goNext() { goTo(Math.min(curSec+1,6)); }
+function goPrev() { goTo(Math.max(curSec-1,0)); }
+
+// ═══════════════════════════════════════════════════════════════
+//  INPUT + CURSOR
+// ═══════════════════════════════════════════════════════════════
+function setupInput() {
+  const cur = document.getElementById('cur');
+  const cur2 = document.getElementById('cur2');
+  let rx = mx, ry = my;
+
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cur.style.left = mx+'px'; cur.style.top = my+'px';
+    // Camera parallax from mouse
+    camMX = (mx/W - 0.5) * 1.2;
+    camMY = (my/H - 0.5) * -0.7;
+  });
+  (function curLoop() {
+    rx += (mx-rx)*.1; ry += (my-ry)*.1;
+    cur2.style.left = rx+'px'; cur2.style.top = ry+'px';
+    requestAnimationFrame(curLoop);
+  })();
+
+  document.querySelectorAll('button,.nd,.wl,.stat-chip').forEach(el => {
+    el.addEventListener('mouseenter', () => document.body.classList.add('hov'));
+    el.addEventListener('mouseleave', () => document.body.classList.remove('hov'));
+  });
+  document.addEventListener('click', e => {
+    const r = document.createElement('div'); r.className='rip';
+    r.style.cssText = `left:${e.clientX}px;top:${e.clientY}px`;
+    document.body.appendChild(r); setTimeout(()=>r.remove(),700);
+  });
+
+  let lastW = 0;
+  window.addEventListener('wheel', e => {
+    const n = Date.now(); if(n-lastW<860)return; lastW=n;
+    e.deltaY>0 ? goNext() : goPrev();
+  }, {passive:true});
+  window.addEventListener('keydown', e => {
+    if(e.key==='ArrowRight'||e.key==='ArrowDown') goNext();
+    if(e.key==='ArrowLeft'||e.key==='ArrowUp') goPrev();
+  });
+  let tx=0;
+  window.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;},{passive:true});
+  window.addEventListener('touchend',e=>{const d=tx-e.changedTouches[0].clientX;if(Math.abs(d)>50){d>0?goNext():goPrev();}},{passive:true});
+
+  document.querySelectorAll('.wl').forEach(d => { d.onclick = ()=>goTo(parseInt(d.dataset.i)); });
+}
+
+function setupNav() {
+  const w = document.getElementById('ndots');
+  for (let i=0; i<7; i++) {
+    const d = document.createElement('div');
+    d.className='nd'+(i===0?' on':''); d.dataset.i=i;
+    d.onclick=()=>goTo(i); w.appendChild(d);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
 //  MODALS
-// ═══════════════════════════════════════════════════════
-const MODALS={
-  field:{ew:'Research Environment · Field Access',title:'Enter the Field',
-    html:`<p class="m-text">The Tachyonova research environment is the conceptual space where all ongoing study of superluminal network architecture takes place. Entering the field means beginning to explore the foundational questions the project is built on.</p>
-    <p class="m-text" style="color:rgba(244,241,250,.28);margin-top:-4px">This is not a product. It is an open inquiry — into physics, distributed systems, and what lies beyond the limits we take for granted.</p>
-    <div style="margin:4px 0"><div class="m-row"><span class="m-rk">Project Status</span><span class="m-rv">Phase 0 · Concept &amp; Research</span></div><div class="m-row"><span class="m-rk">Research Domain</span><span class="m-rv">Superluminal network theory</span></div><div class="m-row"><span class="m-rk">Current Output</span><span class="m-rv">Visual identity · Interactive prototypes</span></div><div class="m-row"><span class="m-rk">Next Milestone</span><span class="m-rv">QPoS architecture paper · Phase 1</span></div></div>
-    <p class="m-text" style="color:rgba(244,241,250,.25)">Tachyonova is the intellectual property of its creator, <b>Sumit Suman</b>. No token or financial instrument is deployed. This is a creative and scientific research initiative.</p>
-    <div class="m-btns"><button class="m-btn-c" onclick="openModal('paper')">Read the Paper</button><button class="m-btn-g" onclick="closeModal()">Close</button></div>`},
-  paper:{ew:'Research Documentation · Draft 0.1',title:'Tachyonova Research Paper',
-    html:`<p class="m-text">The Tachyonova theoretical paper describes the conceptual architecture of a blockchain network inspired by tachyonic physics. It is currently in early drafting phase as part of Phase 0 research.</p>
-    <div style="margin:4px 0"><div class="m-row"><span class="m-rk">Document Status</span><span class="m-rv">Draft · Not yet published</span></div><div class="m-row"><span class="m-rk">Topics Covered</span><span class="m-rv">Tachyon physics · QPoS · Crystal Nodes</span></div><div class="m-row"><span class="m-rk">Consensus Model</span><span class="m-rv">Quantum Proof-of-Stake (QPoS)</span></div><div class="m-row"><span class="m-rk">Copyright</span><span class="m-rv">© Sumit Suman · All Rights Reserved</span></div></div>
-    <p class="m-text" style="margin-top:-4px">The paper explores whether superluminal information transfer principles can model zero-latency consensus, how a Crystal Node lattice achieves Byzantine fault tolerance, and what tachyonic energy geometry implies for quantum stake incentives.</p>
-    <div class="m-btns"><button class="m-btn-c" onclick="closeModal()">Understood</button><button class="m-btn-g" onclick="openModal('field')">Back to Field</button></div>`}
+// ═══════════════════════════════════════════════════════════════
+const MDATA = {
+  field: {
+    ew:'Research Environment · Field Access',
+    title:'Enter the Field',
+    html:`<p class="m-text">The Tachyonova research environment is the conceptual space where all ongoing study of superluminal network architecture takes place. Not a product — an open inquiry into physics and distributed systems.</p>
+    <div style="margin:4px 0">
+      <div class="m-row"><span class="m-rk">Project Status</span><span class="m-rv">Phase 0 · Concept &amp; Research</span></div>
+      <div class="m-row"><span class="m-rk">Research Domain</span><span class="m-rv">Superluminal network theory</span></div>
+      <div class="m-row"><span class="m-rk">Creator</span><span class="m-rv">Sumit Suman</span></div>
+      <div class="m-row"><span class="m-rk">Copyright</span><span class="m-rv">© Sumit Suman · All Rights Reserved</span></div>
+    </div>
+    <div class="m-btns"><button class="m-btn-c" onclick="openM('paper')">Read the Paper</button><button class="m-btn-g" onclick="closeM()">Close</button></div>`
+  },
+  paper: {
+    ew:'Research Documentation · Draft 0.1',
+    title:'Research Paper',
+    html:`<p class="m-text">The Tachyonova theoretical paper describes a blockchain architecture inspired by tachyonic physics. Currently in early drafting phase as part of Phase 0 research.</p>
+    <div style="margin:4px 0">
+      <div class="m-row"><span class="m-rk">Document Status</span><span class="m-rv">Draft · Not yet published</span></div>
+      <div class="m-row"><span class="m-rk">Consensus Model</span><span class="m-rv">Quantum Proof-of-Stake (QPoS)</span></div>
+      <div class="m-row"><span class="m-rk">Network Design</span><span class="m-rv">Crystal Node Lattice · 144 Nodes</span></div>
+    </div>
+    <p class="m-text" style="color:rgba(180,215,238,0.32)">Explores whether superluminal mechanics can model zero-latency consensus, and what tachyonic energy geometry implies for quantum stake incentives.</p>
+    <div class="m-btns"><button class="m-btn-c" onclick="closeM()">Understood</button><button class="m-btn-g" onclick="openM('field')">Back</button></div>`
+  }
 };
-function openModal(key){const m=MODALS[key];document.getElementById('MEW').textContent=m.ew;document.getElementById('MT').textContent=m.title;document.getElementById('MB').innerHTML=m.html;document.getElementById('MODAL').classList.add('show');}
-function closeModal(){document.getElementById('MODAL').classList.remove('show');}
-document.getElementById('btnField').addEventListener('click',()=>openModal('field'));
-document.getElementById('btnPaper').addEventListener('click',()=>openModal('paper'));
-document.getElementById('MC').addEventListener('click',closeModal);
-document.getElementById('MODAL').addEventListener('click',e=>{if(e.target===document.getElementById('MODAL'))closeModal();});
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+function openM(k) {
+  const m=MDATA[k];
+  document.getElementById('mew').textContent=m.ew;
+  document.getElementById('mt').textContent=m.title;
+  document.getElementById('mb').innerHTML=m.html;
+  document.getElementById('modal').classList.add('show');
+}
+function closeM() { document.getElementById('modal').classList.remove('show'); }
+document.getElementById('btnField')?.addEventListener('click',()=>openM('field'));
+document.getElementById('btnPaper')?.addEventListener('click',()=>openM('paper'));
+document.getElementById('mc')?.addEventListener('click',closeM);
+document.getElementById('modal')?.addEventListener('click',e=>{if(e.target===document.getElementById('modal'))closeM();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeM();});
+
+// ═══════════════════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════════════════
+window.addEventListener('load', () => {
+  document.getElementById('lf').style.width = '100%';
+  setTimeout(() => {
+    document.getElementById('loader').classList.add('out');
+    setupNav();
+    setupInput();
+    initP1(); initP2();
+    setTimeout(initP4, 400);
+    animateThree();
+    panelLoop();
+  }, 3300);
+});
 </script>
 </body>
 </html>
